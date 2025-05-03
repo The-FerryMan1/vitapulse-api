@@ -80,7 +80,7 @@ app.post('/', validator('json', (value, c)=>{
                 httpOnly: true,
                 maxAge: 15 * 60, //15mins,
                 expires: new Date(Date.now() + 15 * 60 * 1000),
-                sameSite: 'none',
+                sameSite: 'None',
                 secure: process.env.PRODUCTION! === 'production'
             }
         );
@@ -95,7 +95,7 @@ app.post('/', validator('json', (value, c)=>{
                 httpOnly: true,
                 maxAge: 7 * 24 * 60 * 60,  //7 days
                 expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-                sameSite: 'none',
+                sameSite: 'None',
                 secure: process.env.PRODUCTION! === 'production'
             }
         )
