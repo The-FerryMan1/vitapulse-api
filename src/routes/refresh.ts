@@ -54,7 +54,6 @@ app.post('/', async (c) => {
             process.env.COOKIE_SECRET_TOKEN!,
             {
                 path: '/',
-                domain: '.onrender.com',
                 httpOnly: true,
                 maxAge: 15 * 60, //15mins,
                 expires: new Date(Date.now() + 15 * 60 * 1000),
@@ -70,7 +69,6 @@ app.post('/', async (c) => {
             process.env.COOKIE_SECRET_TOKEN!,
             {
                 path: '/',
-                domain: '.onrender.com',
                 httpOnly: true,
                 maxAge: 7 * 24 * 60 * 60,  //7 days
                 expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
