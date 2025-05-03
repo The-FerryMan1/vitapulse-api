@@ -9,17 +9,25 @@ const app = new Hono();
 
 app.post('/', async (c) => {
     try {
-        const refresh_token = await getSignedCookie(c, process.env.COOKIE_SECRET_TOKEN!, 'refresh_token')
-        if (!refresh_token) return c.json({ message: 'Please, login again' }, 401);
-        const isRefreshValid = await verify(refresh_token, process.env.REFRESH_SECRET_TOKEN!);
-        const {id} = isRefreshValid;
+        // const refresh_token = await getSignedCookie(c, process.env.COOKIE_SECRET_TOKEN!, 'refresh_token')
+        // if (!refresh_token) return c.json({ message: 'Please, login again' }, 401);
+        // const isRefreshValid = await verify(refresh_token, process.env.REFRESH_SECRET_TOKEN!);
+        // const {id} = isRefreshValid;
         
-        await db.update(users).set({ status: false }).where(eq(users.id, Number(id)));
-        await db.insert(logs).values({ user_id: Number(id), activity: 'Logout', timestamp:new Date(Date.now()).toISOString()});
+        // await db.update(users).set({ status: false }).where(eq(users.id, Number(id)));
+        // await db.insert(logs).values({ user_id: Number(id), activity: 'Logout', timestamp:new Date(Date.now()).toISOString()});
 
         
-        deleteCookie(c, 'access_token');
-        deleteCookie(c, 'refresh_token');
+        deleteCookie(c, 'access_token', {
+            sameSite: 'None',
+            path: '/',
+            secure: true,
+        });
+        deleteCookie(c, 'refresh_token', {
+            sameSite: 'None',
+            path: '/',
+            secure: true,
+        });
 
         return c.json({ message: 'successfuly logout' });
 
