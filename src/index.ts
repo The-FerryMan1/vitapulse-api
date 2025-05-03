@@ -32,7 +32,7 @@ const { websocket} = createBunWebSocket<ServerWebSocket>();
 // middleware setup
 app.use(logger());
 app.use(cors({
-    origin: ['http://localhost:5173'],
+    origin: ['http://localhost:5173', 'https://vitapulse-app.onrender.com'],
     credentials: true
 }))
 
