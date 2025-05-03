@@ -48,7 +48,7 @@ app.route('/email-verification', emailSendRoute);
 app.route('/login', loginRoute);
 app.route('/verify', verifyRoute);
 app.route('/refresh', refreshRoute);
-app.route('/logout', logoutRoute);
+app.route('/auth/logout', logoutRoute);
 
 
 //public route
