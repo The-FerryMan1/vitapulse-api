@@ -19,7 +19,6 @@ app.get('/', upgradeWebSocket(async (c) => {
             interval = setInterval(async()=>{
                 const res = await googelSheetGetHelper(googleSheetURl)
                 if(res.message) return
-
                 const readings = JSON.stringify({...res})
 
                 if (readings === isTheDataNew){

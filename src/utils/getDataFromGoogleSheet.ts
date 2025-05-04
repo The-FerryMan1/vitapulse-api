@@ -24,7 +24,7 @@ export const googelSheetGetHelper = async (url: string) => {
             time.getSeconds()
         )
         return {
-            date: combineDatetime,
+            date: combineDatetime.toISOString(),
             systolic: Number(part[2]),
             diastolic: Number(part[3]),
             pulseRate: Number(part[4]),

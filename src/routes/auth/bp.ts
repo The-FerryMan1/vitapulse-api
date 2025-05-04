@@ -13,7 +13,7 @@ app.post('/', async (c) => {
     const { id, age, email } = await c.get('jwtPayload');
     console.log(email)
     //destucting data from json
-    const { systolic, diastolic, pulse, date } = await c.req.json();
+    const { systolic, diastolic, pulse, timestamp } = await c.req.json();
     const getStatus = getBpAndPulseByAge(systolic, diastolic, pulse, age);
 
     if (!getStatus) return c.json({ message: 'unexpected error' }, 500)
@@ -39,9 +39,12 @@ app.post('/', async (c) => {
            
         }
 
+        const isBpThesame = await db.select({timestamp: bpPulseRecords.timestamp}).from(bpPulseRecords).where(and(eq(bpPulseRecords.user_id, id), eq(bpPulseRecords.timestamp, timestamp))).get();
+
+        if (isBpThesame) return c.json({message: 'Same data'})
+
         await db.insert(bpPulseRecords).values({
-            user_id: id, diastolic: diastolic, systolic: systolic, bpStatus: bpStatus, clinicalBpLabel, pulseStatus: pulseStatus, pulse: pulse, timestamp: new Date(date    ).toISOString()
-        });
+            user_id: id, diastolic: diastolic, systolic: systolic, bpStatus: bpStatus, clinicalBpLabel, pulseStatus: pulseStatus, pulse: pulse, timestamp: String(timestamp)});
 
         return c.json({ message: 'Blood pressure saved' }, 201)
     } catch (error) {
