@@ -48,7 +48,7 @@ app.route('/email-verification', emailSendRoute);
 app.route('/login', loginRoute);
 app.route('/verify', verifyRoute);
 app.route('/refresh', refreshRoute);
-app.route('/logout', logoutRoute);
+app.route('/auth/logout', logoutRoute);
 
 
 //public route
@@ -57,7 +57,7 @@ app.route('/bp-google-sheet', getRoute)
 //protected routes
 app.route('/auth/user',user);
 app.route('/auth/bp', bgRoute);
-app.route('/ws', websocketRoute);
+app.route('/auth/ws/bp', websocketRoute);
 app.route('/auth/analyze', analyzeRoute);
 app.route('/auth/alerts', alertRoute);
 app.route('/auth/ws', SSERoute);

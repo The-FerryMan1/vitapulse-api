@@ -13,7 +13,7 @@ app.post('/', async (c) => {
     const { id, age, email } = await c.get('jwtPayload');
     console.log(email)
     //destucting data from json
-    const { systolic, diastolic, pulse } = await c.req.json();
+    const { systolic, diastolic, pulse, date } = await c.req.json();
     const getStatus = getBpAndPulseByAge(systolic, diastolic, pulse, age);
 
     if (!getStatus) return c.json({ message: 'unexpected error' }, 500)
@@ -40,7 +40,7 @@ app.post('/', async (c) => {
         }
 
         await db.insert(bpPulseRecords).values({
-            user_id: id, diastolic: diastolic, systolic: systolic, bpStatus: bpStatus, clinicalBpLabel, pulseStatus: pulseStatus, pulse: pulse, timestamp: new Date().toISOString()
+            user_id: id, diastolic: diastolic, systolic: systolic, bpStatus: bpStatus, clinicalBpLabel, pulseStatus: pulseStatus, pulse: pulse, timestamp: new Date(date    ).toISOString()
         });
 
         return c.json({ message: 'Blood pressure saved' }, 201)

@@ -10,9 +10,21 @@ export const googelSheetGetHelper = async (url: string) => {
         const result = await res.text();
 
         const part = result.split(',')
+
+
+        const date = new Date(part[0]);
+        const time = new Date(part[1]);
+
+        const combineDatetime = new Date(
+            date.getFullYear(),
+            date.getMonth(),
+            date.getDate(),
+            time.getHours(),
+            time.getMinutes(),
+            time.getSeconds()
+        )
         return {
-            date: part[0],
-            timestamp: part[1],
+            date: combineDatetime,
             systolic: Number(part[2]),
             diastolic: Number(part[3]),
             pulseRate: Number(part[4]),
