@@ -3,7 +3,6 @@ import { db } from "../../db";
 import { alertHistory, bpPulseRecords } from "../../db/schema";
 import { getBpAndPulseByAge } from "../../utils/bpByAge";
 import { eq, and, gte, lte, asc, desc } from "drizzle-orm";
-import { ppMapCalculate } from '../../utils/mapPpCalc';
 import { calculateZScores } from "../../utils/zScore";
 import { sendAlertEmail } from "../../utils/emailConf";
 const app = new Hono();
@@ -20,6 +19,9 @@ app.post('/', async (c) => {
     const { bpStatus, pulseStatus, clinicalBpLabel } = getStatus;
 
     try {
+        const isBpThesame = await db.select({ timestamp: bpPulseRecords.timestamp }).from(bpPulseRecords).where(and(eq(bpPulseRecords.user_id, id), eq(bpPulseRecords.timestamp, timestamp))).get();
+        if (isBpThesame) return c.json({ message: 'Same data' })
+
 
         const isAbnormal =
             ['Hypertensive Crisis', 'Hypertension Stage 2', 'Hypertension Stage 1', 'Elevated', 'Low', 'Low BP (Hypotension)'].includes(bpStatus) ||
@@ -39,9 +41,7 @@ app.post('/', async (c) => {
            
         }
 
-        const isBpThesame = await db.select({timestamp: bpPulseRecords.timestamp}).from(bpPulseRecords).where(and(eq(bpPulseRecords.user_id, id), eq(bpPulseRecords.timestamp, timestamp))).get();
-
-        if (isBpThesame) return c.json({message: 'Same data'})
+       
 
         await db.insert(bpPulseRecords).values({
             user_id: id, diastolic: diastolic, systolic: systolic, bpStatus: bpStatus, clinicalBpLabel, pulseStatus: pulseStatus, pulse: pulse, timestamp: String(timestamp)});

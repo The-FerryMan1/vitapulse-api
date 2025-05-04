@@ -50,6 +50,9 @@ app.get("/historical", upgradeWebSocket(async (c) => {
                             startTime = new Date(now.getFullYear(), now.getMonth(), 1);
                             break;
                         default:
+                            startTime = new Date(now);
+                            startTime.setMinutes(0, 0, 0);
+                            break;
 
                     }
                     const results = await db
@@ -98,6 +101,7 @@ app.get("/historical", upgradeWebSocket(async (c) => {
 }));
 
 
+
 app.get("/dashboard", upgradeWebSocket(async()=>{
     let intervalId: Timer;
     const ageGroups = [
@@ -113,11 +117,6 @@ app.get("/dashboard", upgradeWebSocket(async()=>{
             console.log('webscoket connection opened')
             try {
                 intervalId = setInterval(async()=>{
-
-
-
-                    
-
                     const user = await db.select().from(users).all();
 
                     const counts: Record<string, number> = {};
