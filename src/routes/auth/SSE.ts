@@ -23,7 +23,7 @@ app.get("/historical", upgradeWebSocket(async (c) => {
             let startTime: Date;
             intervalId = setInterval(async () => {
 
-                console.log(filter)
+                console.log(filter, fromQuery, toQuery)
 
                 try {
 
