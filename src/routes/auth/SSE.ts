@@ -49,10 +49,21 @@ app.get("/historical", upgradeWebSocket(async (c) => {
                         case 'monthly':
                             startTime = new Date(now.getFullYear(), now.getMonth(), 1);
                             break;
-                        default:
-                            startTime = new Date(now);
-                            startTime.setMinutes(0, 0, 0);
+                        case 'custom':
+                            if (!fromQuery || !toQuery) {
+                                return c.json({ errorMessage: 'Custom filter requires "from" and "to" query params' }, 400);
+                            }
+
+                            startTime = new Date(fromQuery);
+                            endTime = new Date(toQuery);
+
+                            if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
+                                return c.json({ errorMessage: 'Invalid "from" or "to" date format' }, 400);
+                            }
+
                             break;
+                        default:
+                            return c.json({ errorMessage: 'Invalid filter option' }, 400);
 
                     }
                     const results = await db
