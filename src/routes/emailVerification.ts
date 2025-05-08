@@ -1,5 +1,4 @@
 import { Hono } from "hono";
-import { randomUUIDv7 } from "bun";
 import { db } from "../db";
 import { logs, users, verificationToken } from "../db/schema";
 import { eq } from "drizzle-orm";
@@ -18,7 +17,7 @@ app.post('/', async(c)=>{
         if(!user) return c.json({message: 'No user found'}, 404);
 
         //generate token
-        const token = randomUUIDv7();
+        const token = crypto.randomUUID();
 
         //generate token expiration
         const tokenExpires = new Date(Date.now() + 1000 * 60 * 60); //1 hour
@@ -52,7 +51,7 @@ app.post('/resendVerification', async(c)=>{
         const isVerified = user.isVerified;
         if(isVerified) return c.json({message: 'Email is already verified'}, 400);
 
-        const token = randomUUIDv7();
+        const token = crypto.randomUUID();
 
         //generate token expiration
         const tokenExpires = new Date(Date.now() + 1000 * 60 * 60); //1 hour
