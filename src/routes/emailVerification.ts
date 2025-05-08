@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import {randomUUIDv7} from 'bun';
+import { randomUUIDv7 } from "bun";
 import { db } from "../db";
 import { logs, users, verificationToken } from "../db/schema";
 import { eq } from "drizzle-orm";
