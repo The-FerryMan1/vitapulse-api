@@ -1,12 +1,11 @@
 import * as nodemailer from 'nodemailer';
-
+import "dotenv/config";
 const transport = nodemailer.createTransport({
-    host: "sandbox.smtp.mailtrap.io",
-    port: 2525,
+    service: "gmail",
     auth: {
-        user: "b989de5001a8d8",
-        pass: "f0239d72acfaba"
-    }
+        user: process.env.GOOGLE_APP_EMAIL!,
+        pass: process.env.GOOGLE_APP_PASSWORD,
+    },
 });
 
 
