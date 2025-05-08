@@ -6,7 +6,7 @@ export const userInfoUpdate = z.object({
     birthday: z.string().date(),
     sex: z.enum(['male', 'female', 'Male', 'Female']),
     contact: z.string().min(11).max(12),
-    role: z.string(),
+    role: z.string().optional(),
 })
 export const userPassChange = z.object({
     Currentpassword: z.string().min(8),

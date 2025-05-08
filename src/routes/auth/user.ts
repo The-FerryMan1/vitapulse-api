@@ -31,10 +31,10 @@ app.put('/', validator('json', (value, c) => {
     return parsed.data;
 }), async (c) => {
     const { id } = await c.get('jwtPayload');
-    const { deviceId, birthday, contact, name, sex } = await c.req.valid('json');
+    const { deviceId, birthday, contact, name, sex, role } = await c.req.valid('json');
 
     try {
-        await db.update(users).set({ deviceId, birthday, contact, name, sex }).where(eq(users.id, id));
+        await db.update(users).set({ deviceId, birthday, contact, name, sex, role }).where(eq(users.id, id));
         await db.insert(logs).values({ user_id: id, activity: 'Update information', timestamp: new Date(Date.now()).toISOString() })
         return c.json({
             message: 'Account information updated'
