@@ -23,6 +23,12 @@ export const verificationToken = sqliteTable("verificationToken", {
     userId: int().references(() => users.id, { onDelete: 'cascade' }),
     tokenExpires: int({ mode: "timestamp" }).notNull(),
 });
+export const passwordResetToken = sqliteTable("resetToken", {
+    id: int().primaryKey({ autoIncrement: true }),
+    token: text().notNull().unique(),
+    userId: int().references(() => users.id, { onDelete: 'cascade' }),
+    tokenExpires: int({ mode: "timestamp" }).notNull(),
+});
 
 export type User = typeof users.$inferSelect;
 

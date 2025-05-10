@@ -11,7 +11,7 @@ const transport = nodemailer.createTransport({
 
 export const sendVerificationCode = async (email: string, code: string) => {
     const mailOptions = {
-        from: 'Vitapulse@gmail.com',
+        from: process.env.GOOGLE_APP_EMAIL!,
         to: email,
         subject: 'Verify Your Email Address',
         text: `Welcome to Vitapulse! Please verify your email by clicking the following link: https://vitapulse-app.onrender.com/${code}`,
@@ -45,7 +45,7 @@ export const sendVerificationCode = async (email: string, code: string) => {
 
 export const sendAlertEmail = async (email: string, alertMessage: string) => {
     const mailOptions = {
-        from: 'Vitapulse@gmail.com',
+        from: process.env.GOOGLE_APP_EMAIL!,
         to: email,
         subject: '⚠️ Important Alert from Vitapulse',
         text: `Hello,
@@ -82,4 +82,23 @@ If you did not initiate this or believe it's an error, please contact our suppor
         return false
     }
 };
+
+
+export const sendResetPassword = async(email: string, token: string)=>{
+    const mailOptions = {
+        from: process.env.GOOGLE_APP_EMAIL!,
+        to: email,
+        subject: 'Password Reset',
+        html: `<p>You requested a password reset.</p>
+               <p>Click <a href="http://localhost:5173/reset-password/${token}">here</a> to reset your password. This link will expire in 1 hour.</p>`
+    };
+
+    try {
+        await transport.sendMail(mailOptions);
+        console.log('Verification email sent successfully');
+    } catch (error) {
+        console.error('Error sending verification email:', error);
+
+    }
+}
 

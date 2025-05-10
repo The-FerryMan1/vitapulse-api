@@ -26,6 +26,7 @@ import { getRoute } from './routes/get-data';
 import { userManagementRoute } from './routes/auth/admin/userManagement';
 import { ActivityLogsRoutes } from './routes/auth/admin/ActivityLogs';
 import { SSERoute } from './routes/auth/SSE';
+import { passwordResetRoute } from './routes/passwordReset';
 
 const app = new Hono().basePath('/api/');
 const { websocket} = createBunWebSocket<ServerWebSocket>();
@@ -45,6 +46,7 @@ app.get('/', (c) => c.text('Hello Bun!'));
 // routes setup
 app.route('/register', registerRoute);
 app.route('/email-verification', emailSendRoute);
+app.route('/password-reset', passwordResetRoute);
 app.route('/login', loginRoute);
 app.route('/verify', verifyRoute);
 app.route('/refresh', refreshRoute);
