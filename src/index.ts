@@ -27,6 +27,7 @@ import { userManagementRoute } from './routes/auth/admin/userManagement';
 import { ActivityLogsRoutes } from './routes/auth/admin/ActivityLogs';
 import { SSERoute } from './routes/auth/SSE';
 import { passwordResetRoute } from './routes/passwordReset';
+import { googelSheetGetHelper } from './utils/getDataFromGoogleSheet';
 
 const app = new Hono().basePath('/api/');
 const { websocket} = createBunWebSocket<ServerWebSocket>();
@@ -40,7 +41,13 @@ app.use(cors({
 app.use('/auth/*', verifyUser);
 app.use('/auth/admin/*', verifyAdmin);
 
-app.get('/', (c) => c.text('Hello Bun!'));
+app.get('/debug', async(c)=>{
+
+    const res = await googelSheetGetHelper('https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLjjY9ad1RWnzfHErHYoC40-z9i85wqOe8wt3JA4q7PXqtJGMXj1Zlg3b_d0n_zTC5YiElEbb31dzpKJhp-pI-nz69XyadmLIR0QbthQZaAMjmaCdVRx1glkhPOW95pw1s5LW17bYHj6dlBmMNQo6WexCsuOskzqi5ZDX06_E7U2e-_bY4Ze_yAORX9hlqm67Zuk_aDn-W9AWLdMwvhQTYlxIPBn0egtF6LFLa-fnJCucqkxhkRBV3Ne8KDJhZK6wlLlQOwfqa6Lf1qNGAr0U16sWprLa3CVBrGfsjBs4FE5Y2JAV5Q&lib=MfUMAu43yfO2fKjBdhRibWzwPPqT7M8tq')
+
+    return c.json(res)
+
+});
 
 
 // routes setup

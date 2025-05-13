@@ -9,25 +9,24 @@ export const googelSheetGetHelper = async (url: string) => {
         };
         const result = await res.text();
 
-        const part = result.split(',')
 
 
-        const date = new Date(part[0]);
-        const time = new Date(part[1]);
+        const [dateStr, legacyDateTimeStr, systolic, diastolic, pulseRate] = result.split(',');
+        const timeMatch = legacyDateTimeStr.match(/\d{2}:\d{2}:\d{2}/);
+        const timeStr = timeMatch ? timeMatch[0] : null;
 
-        const combineDatetime = new Date(
-            date.getFullYear(),
-            date.getMonth(),
-            date.getDate(),
-            time.getHours(),
-            time.getMinutes(),
-            time.getSeconds()
-        )
+
+
+        const [day, month, year] = dateStr.split('/');
+        const isoDate = new Date(`${year}-${month}-${day}T${timeStr}+08:00`).toISOString();
+
+
+
         return {
-            date: combineDatetime.toISOString(),
-            systolic: Number(part[2]),
-            diastolic: Number(part[3]),
-            pulseRate: Number(part[4]),
+            date: isoDate,
+            systolic: Number(systolic),
+            diastolic: Number(diastolic),
+            pulseRate: Number(pulseRate),
         };
     } catch (error) {
         console.log(error);
