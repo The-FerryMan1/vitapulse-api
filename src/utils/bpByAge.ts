@@ -32,6 +32,10 @@ export const getBpAndPulseByAge = (
 
     // Corrected BP classification based on standard clinical guidelines
     const getClinicalBpLabel = (): string => {
+        if (systolic === 254 || systolic === 255 || diastolic === 254 || diastolic === 255) {
+            return 'Error';
+        }
+
         if (systolic < 90 || diastolic < 60) {
             return 'Low BP (Hypotension)';
         } else if (systolic >= 180 || diastolic >= 120) {
@@ -49,37 +53,88 @@ export const getBpAndPulseByAge = (
         }
     };
 
+
+    const getBpbyAge = () => {
+        if (systolic === 254 || systolic === 255 || diastolic === 254 || diastolic === 255) {
+            return 'Error';
+        }
+        if (age >= 1 && age <= 13) {
+            if (systolic < 90 || diastolic < 55) return 'Low BP (Hypotension)';
+            if (systolic > 120 || diastolic > 80) return 'High BP (Hypertension)';
+            return 'Normal';
+        }
+
+        // TEENS (14–18 years)
+        if (age >= 14 && age <= 18) {
+            if (systolic < 90 || diastolic < 60) return 'Low BP (Hypotension)';
+            if (systolic > 130 || diastolic > 85) return 'High BP (Hypertension)';
+            return 'Normal';
+        }
+
+        // YOUNG & MIDDLE-AGED ADULTS (19–59 years)
+        if (age >= 19 && age <= 59) {
+            if (systolic < 95 || diastolic < 60) return 'Low BP (Hypotension)';
+            if (systolic >= 180 || diastolic >= 120) return 'Hypertensive Crisis';
+            if (systolic >= 140 || diastolic >= 90) return 'Hypertension Stage 2';
+            if (systolic >= 130 || diastolic >= 80) return 'Hypertension Stage 1';
+            if (systolic >= 120 && diastolic < 80) return 'Elevated';
+            if (systolic < 120 && diastolic < 80) return 'Normal';
+            return 'Unclassified';
+        }
+
+        // OLDER ADULTS (60+ years)
+        if (age >= 60) {
+            if (systolic < 100 || diastolic < 60) return 'Low BP (Hypotension)';
+            if (systolic >= 180 || diastolic >= 120) return 'Hypertensive Crisis';
+            if (systolic >= 150 || diastolic >= 90) return 'Hypertension (Common in elderly)';
+            if (systolic >= 130 || diastolic >= 80) return 'Elevated / Pre-Hypertension';
+            if (systolic < 130 && diastolic < 80) return 'Normal';
+            return 'Unclassified';
+        }
+
+        // If age is not in a valid range
+        return 'Invalid';
+    }
+
     // Pulse classification based on age
     const getPulseStatus = (): Status => {
-        if (age <= 5) {
-            if (pulse > 120) return 'High';
+        if (age >= 1 && age <= 3) { // Toddler
             if (pulse < 80) return 'Low';
-        } else if (age <= 12) {
-            if (pulse > 110) return 'High';
+            if (pulse > 150) return 'High';
+            return 'Normal';
+        } else if (age >= 4 && age <= 5) { // Preschool
             if (pulse < 70) return 'Low';
-        } else if (age <= 18) {
+            if (pulse > 140) return 'High';
+            return 'Normal';
+        } else if (age >= 6 && age <= 12) { // School-age
+            if (pulse < 60) return 'Low';
+            if (pulse > 120) return 'High';
+            return 'Normal';
+        } else if (age >= 13 && age <= 18) { // Teen
+            if (pulse < 50) return 'Low';
             if (pulse > 100) return 'High';
+            return 'Normal';
+        } else if (age >= 19 && age <= 60) { // Adult
             if (pulse < 60) return 'Low';
-        } else if (age <= 40) {
             if (pulse > 100) return 'High';
+            return 'Normal';
+        } else if (age > 60) { // Older Adult
             if (pulse < 60) return 'Low';
-        } else if (age <= 60) {
-            if (pulse > 95) return 'High';
-            if (pulse < 60) return 'Low';
+            if (pulse > 100) return 'High';
+            return 'Normal';
         } else {
-            if (pulse > 90) return 'High';
-            if (pulse < 55) return 'Low';
+            return 'Invalid';
         }
-        return 'Normal';
     };
 
-    const bpStatus = getClinicalBpLabel(); // Use the corrected BP classification
+    const bpStatus = getBpbyAge(); 
+    const clinicallabel = getClinicalBpLabel()
     const pulseStatus = getPulseStatus();
 
     return {
         bpStatus,
         pulseStatus,
-        clinicalBpLabel: bpStatus,
+        clinicalBpLabel: clinicallabel,
         message: `BP: ${bpStatus}, Pulse: ${pulseStatus}`
     };
 };
