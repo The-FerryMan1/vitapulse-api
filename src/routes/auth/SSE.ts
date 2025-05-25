@@ -194,7 +194,7 @@ app.get("/notification", upgradeWebSocket(async(c)=>{
 
                 if(role !== 'admin'){
                     try {
-                        const alertHs = await db.select().from(alertHistory).orderBy(desc(alertHistory.timestamp)).limit(3).all();
+                        const alertHs = await db.select().from(alertHistory).where(and(eq(alertHistory.user_id, id),eq(alertHistory.isRead, false))).orderBy(desc(alertHistory.timestamp)).limit(3).all();
 
                         ws.send(JSON.stringify(alertHs))
                     } catch (error) {

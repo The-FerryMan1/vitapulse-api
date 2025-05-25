@@ -3,6 +3,7 @@ import { db } from "../../db";
 import { alertHistory } from "../../db/schema";
 import { and, eq, gte, lte } from "drizzle-orm";
 
+
 const app = new Hono();
 
 app.get('/', async(c)=>{
@@ -78,5 +79,40 @@ app.get('/', async(c)=>{
         })
     }
 });
+
+
+app.patch('/:id', async(c)=>{
+    const {id} = await c.get('jwtPayload');
+    const paramId = c.req.param('id')
+    try {
+        await db.update(alertHistory).set({isRead: true}).where(and(eq(alertHistory.user_id, id), eq(alertHistory.id, Number(paramId))));
+
+        return c.json({
+            message: 'alert status updated'
+        }, 200)
+    } catch (error) {
+        console.log(error)
+        return c.json({
+            message: 'Internal error'
+        })
+    }
+})
+
+app.patch('/', async(c)=>{
+    const { id } = await c.get('jwtPayload');
+
+    try {
+        await db.update(alertHistory).set({ isRead: true }).where(eq(alertHistory.user_id, id));
+
+        return c.json({
+            message: 'alert status updated'
+        }, 200)
+    } catch (error) {
+        console.log(error)
+        return c.json({
+            message: 'Internal error'
+        })
+    }
+})
 
 export {app as alertRoute};

@@ -60,6 +60,7 @@ export const alertHistory = sqliteTable('alert_history', {
     id: int().primaryKey({ autoIncrement: true }),  // Auto-incrementing ID
     user_id: int().references(() => users.id, { onDelete: 'cascade' }).notNull(),  // Foreign key to users table
     message: text().notNull(),  // The alert message
+    isRead: int({ mode: 'boolean' }).default(false).notNull(),
     timestamp: text().notNull(),  // Timestamp when the alert was sent
 });
 
