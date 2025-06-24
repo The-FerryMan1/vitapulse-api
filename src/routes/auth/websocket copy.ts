@@ -49,11 +49,11 @@ app.get('/', upgradeWebSocket(async (c) => {
                             .select({ id: users.id, email: users.email, birthday: users.birthday })
                             .from(users)
                             .where(eq(users.deviceId, msg.toDeviceId))
-                            .get();
-                            console.log(res)
+                            ;
+                            console.log(res[0])
 
-                        if (res) {
-                            const age = getTheAge(res?.birthday)
+                        if (res[0]) {
+                            const age = getTheAge(res[0]?.birthday)
                             const { bpStatus, pulseStatus, clinicalBpLabel } = getBpAndPulseByAge(
                                 systolic,
                                 diastolic,
@@ -68,43 +68,43 @@ app.get('/', upgradeWebSocket(async (c) => {
 
                             if (isAbnormal) {
                                 // Locking to prevent duplicate alerts
-                                if (alertLocks.get(String(res.id))) {
-                                    console.log(`Skipping: Alert already being processed for user ${res.email}`);
+                                if (alertLocks.get(String(res[0].id))) {
+                                    console.log(`Skipping: Alert already being processed for user ${res[0].email}`);
                                     return;
                                 }
 
-                                alertLocks.set(String(res.id), true); // lock
+                                alertLocks.set(String(res[0].id), true); // lock
 
                                 try {
                                     const lastAlert = await db
                                         .select({ timestamp: alertHistory.timestamp })
                                         .from(alertHistory)
-                                        .where(eq(alertHistory.user_id, res.id))
+                                        .where(eq(alertHistory.user_id, res[0].id))
                                         .orderBy(desc(alertHistory.timestamp))
                                         .limit(1)
-                                        .get();
+                                        ;
 
                                     const now = new Date();
                                     const cooldownMs = 60 * 60 * 1000; // 1 hour
-                                    const canSendAlert = !lastAlert || (now.getTime() - new Date(lastAlert.timestamp).getTime()) > cooldownMs;
+                                    const canSendAlert = !lastAlert[0] || (now.getTime() - new Date(lastAlert[0].timestamp).getTime()) > cooldownMs;
 
                                     if (canSendAlert) {
-                                        await sendAlertEmail(res.email, `Blood Pressure: ${clinicalBpLabel}, consider to go to nearest clinic`);
+                                        await sendAlertEmail(res[0].email, `Blood Pressure: ${clinicalBpLabel}, consider to go to nearest clinic`);
 
                                         await db.insert(alertHistory).values({
-                                            user_id: res.id,
+                                            user_id: res[0].id,
                                             message: `Bp: ${clinicalBpLabel} Pulse: ${pulseStatus}`,
                                             timestamp: now.toISOString(),
                                         });
 
                                         console.log('✅ Alert sent');
                                     } else {
-                                        console.log(`⏳ Skipped alert (cooldown): ${res.email}`);
+                                        console.log(`⏳ Skipped alert (cooldown): ${res[0].email}`);
                                     }
                                 } catch (err) {
                                     console.error('Alert error:', err);
                                 } finally {
-                                    alertLocks.delete(String(res.id)); // unlock
+                                    alertLocks.delete(String(res[0].id)); // unlock
                                 }
                             }
                         }

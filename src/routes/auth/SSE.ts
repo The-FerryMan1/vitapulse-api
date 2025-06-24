@@ -83,7 +83,7 @@ app.get("/historical", upgradeWebSocket(async (c) => {
                             )
                         )
                         .orderBy(desc(bpPulseRecords.timestamp))
-                        .all();
+                        ;
 
                     // const resultWithPpAndMap = ppMapCalculate(results);
                     const resultWithzScore = calculateZScores(results)
@@ -125,7 +125,7 @@ app.get("/dashboard", upgradeWebSocket(async()=>{
             console.log('webscoket connection opened')
             try {
                 intervalId = setInterval(async()=>{
-                    const user = await db.select().from(users).all();
+                    const user = await db.select().from(users);
 
                     const counts: Record<string, number> = {};
 
@@ -142,7 +142,7 @@ app.get("/dashboard", upgradeWebSocket(async()=>{
                     const userCount = await db.select({
                         userCount: db.$count(users),
                         statusCount: db.$count(users, eq(users.status, true)),
-                    }).from(users).get()
+                    }).from(users)
 
                     const alertCount = await db.$count(alertHistory);
 
@@ -162,7 +162,7 @@ app.get("/dashboard", upgradeWebSocket(async()=>{
                     ws.send(JSON.stringify({
                         counts,
                         logins,
-                        ...userCount,
+                        ...userCount[0],
                         alertCount,
                         abnormal
                     }))
@@ -194,7 +194,7 @@ app.get("/notification", upgradeWebSocket(async(c)=>{
 
                 if(role !== 'admin'){
                     try {
-                        const alertHs = await db.select().from(alertHistory).where(and(eq(alertHistory.user_id, id),eq(alertHistory.isRead, false))).orderBy(desc(alertHistory.timestamp)).limit(3).all();
+                        const alertHs = await db.select().from(alertHistory).where(and(eq(alertHistory.user_id, id),eq(alertHistory.isRead, false))).orderBy(desc(alertHistory.timestamp)).limit(3);
 
                         ws.send(JSON.stringify(alertHs))
                     } catch (error) {
@@ -203,7 +203,7 @@ app.get("/notification", upgradeWebSocket(async(c)=>{
                 }else{
 
                     try {
-                        const alertHs = await db.select().from(alertHistory).where(eq(alertHistory.user_id, id)).orderBy(desc(alertHistory.timestamp)).limit(3).all();
+                        const alertHs = await db.select().from(alertHistory).where(eq(alertHistory.user_id, id)).orderBy(desc(alertHistory.timestamp)).limit(3);
 
                         ws.send(JSON.stringify(alertHs))
                     } catch (error) {

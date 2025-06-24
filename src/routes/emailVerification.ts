@@ -12,9 +12,9 @@ app.post('/', async(c)=>{
 
     try {
         //get user
-        const user = await db.select().from(users).where(eq(users.email, email)).get();
+        const user = await db.select().from(users).where(eq(users.email, email));
         //check if user exist
-        if(!user) return c.json({message: 'No user found'}, 404);
+        if(!user[0]) return c.json({message: 'No user found'}, 404);
 
         //generate token
         const token = crypto.randomUUID();
@@ -23,10 +23,10 @@ app.post('/', async(c)=>{
         const tokenExpires = new Date(Date.now() + 1000 * 60 * 60); //1 hour
 
         //store the token 
-        await db.insert(verificationToken).values({userId: user.id, token, tokenExpires});
+        await db.insert(verificationToken).values({ userId: user[0].id, token, tokenExpires});
 
         //send email
-        await sendVerificationCode(user.email, token);
+        await sendVerificationCode(user[0].email, token);
 
         return c.json({ message: "Verification code sent" }, 200);
     } catch (error) {
@@ -43,12 +43,12 @@ app.post('/resendVerification', async(c)=>{
 
     try {
         //get user
-        const user = await db.select().from(users).where(eq(users.email, email)).get();
+        const user = await db.select().from(users).where(eq(users.email, email));
         //check if user exist
-        if (!user) return c.json({ message: 'No user found' }, 404);
+        if (!user[0]) return c.json({ message: 'No user found' }, 404);
 
         //check if the user is already verified
-        const isVerified = user.isVerified;
+        const isVerified = user[0].isVerified;
         if(isVerified) return c.json({message: 'Email is already verified'}, 400);
 
         const token = crypto.randomUUID();
@@ -57,10 +57,10 @@ app.post('/resendVerification', async(c)=>{
         const tokenExpires = new Date(Date.now() + 1000 * 60 * 60); //1 hour
 
         //store the token 
-        await db.insert(verificationToken).values({ userId: user.id, token, tokenExpires });
+        await db.insert(verificationToken).values({ userId: user[0].id, token, tokenExpires });
 
         //send email
-        await sendVerificationCode(user.email, token);
+        await sendVerificationCode(user[0].email, token);
 
     } catch (error) {
         const errorMessage = (error as Error).message;
@@ -78,17 +78,17 @@ app.get('/:token', async(c)=>{
 
     try {
         //find the token
-        const tokenRecord = await db.select().from(verificationToken).where(eq(verificationToken.token, token)).get();
+        const tokenRecord = await db.select().from(verificationToken).where(eq(verificationToken.token, token));
 
         //check if the token exist in the database
-        if(!tokenRecord) return c.json({message: 'No token found'}, 404);
+        if(!tokenRecord[0]) return c.json({message: 'No token found'}, 404);
 
         //check if the token is expired
-        const isTokenExpired = new Date(tokenRecord.tokenExpires);
+        const isTokenExpired = new Date(tokenRecord[0].tokenExpires);
         if(isTokenExpired < new Date(Date.now())) return c.json({error: "Token expired"}, 400);
 
         //get the user id
-        const {userId} = tokenRecord;
+        const { userId } = tokenRecord[0];
 
         //update the user
         await db.update(users).set({isVerified: true}).where(eq(users.id, Number(userId)));

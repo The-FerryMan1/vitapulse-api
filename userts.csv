@@ -1,0 +1,5 @@
+id,deviceId,name,sex,email,contact,password,role,isVerified,created_At,status,birthday
+4,123,john doe,Male,johndoe@gmail.com,09854521313,"$argon2d$v=19$m=65536,t=2,p=1$0GKYV8+XljhZObGZIbrhoLcv9eT/OVN0rWsSBsd63kk$hrdOEwQuewZGEKCTDwOgEl1oGXb1iUdwwLo+83OJKHU",general,1,1745473454,1,2001-01-13
+5,web-client-123,Administrator,Male,admin@gmail.com,01986322154,"$argon2d$v=19$m=65536,t=2,p=1$JFikC/FuQwV/dUjTydPt1gnsjJu4oVG9lJuFktONduQ$z8lewhpoPNzKXTiu227sDsWvICXXJX68wP9iYra1awY",admin,1,1745474158,0,2000-06-24
+8,1010,jane smith,Male,janesmith@gmail.com,09563215231,"$argon2d$v=19$m=65536,t=2,p=1$pSU2idZuUonpjRLM4lEPIdU5eWe3JeX37c6Y8HM5TT0$Ab7VJHkj9YRNDOE/28r9Ceio7jchDDn5hIUka1gGY/8",general,1,1745906615,0,2025-04-04
+9,123123123,roxy merced,Male,theferryman2312@gmail.com,09867546251,"$argon2d$v=19$m=65536,t=2,p=1$p+v3nqGDdl/o+CJ8+iPOzs8XJsuCxCtSaHNSxNU21RI$SMD8s6zhKyu/IKXRpXNnomyiOlANdb93Yy4VlbjkpqE",general,1,1745906615,0,2025-04-04

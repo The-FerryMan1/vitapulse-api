@@ -19,8 +19,8 @@ app.post('/', async (c) => {
     const { bpStatus, pulseStatus, clinicalBpLabel } = getStatus;
 
     try {
-        const isBpThesame = await db.select({ timestamp: bpPulseRecords.timestamp }).from(bpPulseRecords).where(and(eq(bpPulseRecords.user_id, id), eq(bpPulseRecords.timestamp, timestamp))).get();
-        if (isBpThesame) return c.json({ message: 'Same data' })
+        const isBpThesame = await db.select({ timestamp: bpPulseRecords.timestamp }).from(bpPulseRecords).where(and(eq(bpPulseRecords.user_id, id), eq(bpPulseRecords.timestamp, timestamp)));
+        if (isBpThesame[0]) return c.json({ message: 'Same data' })
 
 
         const isAbnormal =
@@ -123,7 +123,7 @@ app.get('/', async (c) => {
                 )
             )
             .orderBy(desc(bpPulseRecords.timestamp))
-            .all();
+            ;
 
         // const resultWithPpAndMap = ppMapCalculate(results);
         const resultWithzScore = calculateZScores(results)
@@ -208,7 +208,7 @@ app.get('/summary/:id', async (c) => {
                 )
             )
             .orderBy(bpPulseRecords.timestamp)
-            .all();
+            ;
 
         // const resultWithPpAndMap = ppMapCalculate(results);
         const resultWithzScore = calculateZScores(results)

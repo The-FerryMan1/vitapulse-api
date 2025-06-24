@@ -1,33 +1,34 @@
-import { int, sqliteTable, text, unique } from "drizzle-orm/sqlite-core";
+
+import { boolean, integer, pgTable, timestamp, varchar, text, unique } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm';
 
 
-export const users = sqliteTable('users_table', {
-    id: int().primaryKey({autoIncrement: true}),  
-    deviceId: text().unique().notNull(),  
-    name: text().notNull(), 
-    birthday: text().notNull(),  
-    sex: text().notNull(),
-    email: text().notNull().unique(),  
-    contact: text().notNull().unique(),
-    password: text().notNull(),
-    role: text().default('general').notNull(),
-    isVerified: int({mode: 'boolean'}).default(false).notNull(),
-    status: int({mode: 'boolean'}).default(false),
-    created_At:  int({mode: 'timestamp'}).notNull(),
+export const users = pgTable('users_table', {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),  
+    deviceId: varchar({length: 255}).unique().notNull(),  
+    name: varchar({ length: 255 }).notNull(), 
+    birthday: varchar({ length: 255 }).notNull(),  
+    sex: varchar({ length: 255 }).notNull(),
+    email: varchar({ length: 255 }).notNull().unique(),  
+    contact: varchar({ length: 255 }).notNull().unique(),
+    password: varchar({ length: 255 }).notNull(),
+    role: text({enum: ['admin', 'general']}).default('general').notNull(),
+    isVerified: boolean().default(false),
+    status: boolean().default(false),
+    created_At: timestamp().default(new Date(Date.now())),
 });
 
-export const verificationToken = sqliteTable("verificationToken", {
-    id: int().primaryKey({ autoIncrement: true }),
+export const verificationToken = pgTable("verificationToken", {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),  
     token: text().notNull().unique(),
-    userId: int().references(() => users.id, { onDelete: 'cascade' }),
-    tokenExpires: int({ mode: "timestamp" }).notNull(),
+    userId: integer().references(() => users.id, { onDelete: 'cascade' }),
+    tokenExpires: timestamp().notNull(),
 });
-export const passwordResetToken = sqliteTable("resetToken", {
-    id: int().primaryKey({ autoIncrement: true }),
+export const passwordResetToken = pgTable("resetToken", {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),  
     token: text().notNull().unique(),
-    userId: int().references(() => users.id, { onDelete: 'cascade' }),
-    tokenExpires: int({ mode: "timestamp" }).notNull(),
+    userId: integer().references(() => users.id, { onDelete: 'cascade' }),
+    tokenExpires: timestamp().notNull(),
 });
 
 export type User = typeof users.$inferSelect;
@@ -39,13 +40,13 @@ export const usersRelation = relations(users, ({many})=>({
 
 }))
 
-export const bpPulseRecords = sqliteTable('bp_records_table', {
-    id: int().primaryKey({autoIncrement:true}),  // Auto-incrementing ID
-    user_id: int().references(()=> users.id, {onDelete: 'cascade'}).notNull(),  // Foreign key to users table
-    systolic: int().notNull(),  // Systolic blood pressure
-    diastolic: int().notNull(),  // Diastolic blood pressure
+export const bpPulseRecords = pgTable('bp_records_table', {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),  
+    user_id: integer().references(()=> users.id, {onDelete: 'cascade'}).notNull(),  // Foreign key to users table
+    systolic: integer().notNull(),  // Systolic blood pressure
+    diastolic: integer().notNull(),  // Diastolic blood pressure
     bpStatus: text().notNull(),  // Whether the reading is abnormal (true/false)
-    pulse: int().notNull(), //pulse rate 
+    pulse: integer().notNull(), //pulse rate 
     pulseStatus: text().notNull(),  // Whether the reading is abnormal (true/false)
     clinicalBpLabel: text().notNull(),
     timestamp: text().notNull(),  // Timestamp of the measurement
@@ -56,29 +57,29 @@ export type records = typeof bpPulseRecords.$inferSelect;
 
 
 // Alert History table to store past alerts
-export const alertHistory = sqliteTable('alert_history', {
-    id: int().primaryKey({ autoIncrement: true }),  // Auto-incrementing ID
-    user_id: int().references(() => users.id, { onDelete: 'cascade' }).notNull(),  // Foreign key to users table
+export const alertHistory = pgTable('alert_history', {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),  
+    user_id: integer().references(() => users.id, { onDelete: 'cascade' }).notNull(),  // Foreign key to users table
     message: text().notNull(),  // The alert message
-    isRead: int({ mode: 'boolean' }).default(false).notNull(),
+    isRead: boolean().default(false),
     timestamp: text().notNull(),  // Timestamp when the alert was sent
 });
 
 
 //actiivity logs
-export const logs = sqliteTable('logs', {
-    id: int().primaryKey({autoIncrement: true}),
-    user_id: int().references(()=>users.id, {onDelete: 'cascade'}).notNull(),
+export const logs = pgTable('logs', {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),  
+    user_id: integer().references(()=>users.id, {onDelete: 'cascade'}).notNull(),
     activity: text().notNull(),
     timestamp: text().notNull(),  // Timestamp when the alert was sent
 })
 
 
 //logins
-export const loginStat = sqliteTable('login_stat', {
-    id: int('id').primaryKey({ autoIncrement: true }),
+export const loginStat = pgTable('login_stat', {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),  
     date: text('date').notNull(), // Format: YYYY-MM-DD
-    logins: int('logins').notNull().default(0),
+    logins: integer('logins').notNull().default(0),
 }, (t) => [
     unique('unique_date').on(t.date) // New syntax: array, not object
 ]);

@@ -30,11 +30,11 @@ app.post('/', validator('json', (value, c)=>{
 
     try {
         // check if the user's email is valid;
-        const doesUserExist = await db.select().from(users).where(eq(users.email, email)).get();
-        if(!doesUserExist) return c.json({message: 'Account does not exist'}, 401);
+        const doesUserExist = await db.select().from(users).where(eq(users.email, email));
+        if(!doesUserExist[0]) return c.json({message: 'Account does not exist'}, 401);
 
         //if user exist, destruct the data;
-        const {deviceId, birthday, status, id, password:hash_pass, role, isVerified, email:users_email} = doesUserExist
+        const {deviceId, birthday, status, id, password:hash_pass, role, isVerified, email:users_email} = doesUserExist[0]
         const age = getTheAge(birthday);
 
         //check if the password match

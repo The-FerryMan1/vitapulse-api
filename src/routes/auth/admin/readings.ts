@@ -7,7 +7,7 @@ const app = new Hono();
 
 app.get('/', async (c) => {
     try {
-        const allReadings = await db.select().from(bpPulseRecords).all();
+        const allReadings = await db.select().from(bpPulseRecords);
         if (allReadings.length < 0) return c.json({ message: allReadings }, 404);
 
         return c.json(allReadings, 200)
@@ -90,7 +90,7 @@ app.get('/:id', async (c) => {
                 )
             )
             .orderBy(bpPulseRecords.timestamp)
-            .all();
+            ;
 
         return c.json(results, 200);
     } catch (error) {
@@ -170,7 +170,7 @@ app.get('/z-scores/:id', async (c) => {
                 )
             )
             .orderBy(bpPulseRecords.timestamp)
-            .all();
+            ;
 
         const resultWithzScore = calculateZScores(results)
 

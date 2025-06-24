@@ -9,7 +9,7 @@ const app = new Hono();
 
 app.get('/', async(c)=>{
     try {
-        const allUsers = await db.select({id: users.id, status:users.status, deviceId:users.deviceId, name:users.name, birthday:users.birthday, sex:users.sex, email:users.email, contact:users.contact, role: users.role, isVerified:users.isVerified}).from(users).where(eq(users.role, 'general')).all();
+        const allUsers = await db.select({id: users.id, status:users.status, deviceId:users.deviceId, name:users.name, birthday:users.birthday, sex:users.sex, email:users.email, contact:users.contact, role: users.role, isVerified:users.isVerified}).from(users).where(eq(users.role, 'general'));
         if (!allUsers || allUsers.length < 0) return c.json(allUsers, 404);
 
         return c.json(allUsers, 200);
@@ -20,7 +20,7 @@ app.get('/', async(c)=>{
 })
 app.get('/admin-list', async(c)=>{
     try {
-        const allUsers = await db.select({id: users.id, status:users.status, deviceId:users.deviceId, name:users.name, birthday:users.birthday, sex:users.sex, email:users.email, contact:users.contact, role: users.role, isVerified:users.isVerified}).from(users).where(eq(users.role, 'admin')).all();
+        const allUsers = await db.select({id: users.id, status:users.status, deviceId:users.deviceId, name:users.name, birthday:users.birthday, sex:users.sex, email:users.email, contact:users.contact, role: users.role, isVerified:users.isVerified}).from(users).where(eq(users.role, 'admin'));
         if (!allUsers || allUsers.length < 0) return c.json(allUsers, 404);
         return c.json(allUsers, 200);
     } catch (error) {       
@@ -88,7 +88,7 @@ app.get('/users-alerts', async(c)=>{
                     //     // )
                     // )
                     .orderBy(alertHistory.timestamp)
-                    .all();
+                    ;
                     console.log(results)
                 return c.json(results, 200);
         } catch (error) {
@@ -104,10 +104,10 @@ app.get('/usersCount', async(c)=>{
         const userCount = await db.select({
             userCount: db.$count(users),
             statusCount: db.$count(users, eq(users.status, true)),
-        }).from(users).get()
+        }).from(users)
         const alertCount = await db.$count(alertHistory);
         return c.json({
-            ...userCount,
+            ...userCount[0],
             alertCount
         }, 200)
     } catch (error) {
@@ -136,7 +136,7 @@ app.get('/age-distri', async (c) => {
         { label: '61+', min: 61, max: Infinity },
     ];
     try {
-        const user = await db.select().from(users).all();
+        const user = await db.select().from(users);
 
         const counts: Record<string, number> = {};
 

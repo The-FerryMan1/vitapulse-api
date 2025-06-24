@@ -13,10 +13,10 @@ app.get('/', async (c) => {
     const { id } = user;
 
     try {
-        const res = await db.select({ id: users.id, deviceId: users.deviceId, name: users.name, birthday: users.birthday, sex: users.sex, email: users.email, contact: users.contact }).from(users).where(eq(users.id, id)).get();
-        if (!res) return c.json({ message: 'No user found' }, 403);
+        const res = await db.select({ id: users.id, deviceId: users.deviceId, name: users.name, birthday: users.birthday, sex: users.sex, email: users.email, contact: users.contact }).from(users).where(eq(users.id, id));
+        if (!res[0]) return c.json({ message: 'No user found' }, 403);
 
-        return c.json(res, 200);
+        return c.json(res[0], 200);
     } catch (error) {
         return c.json({
             error: error
@@ -34,7 +34,7 @@ app.put('/', validator('json', (value, c) => {
     const { deviceId, birthday, contact, name, sex, role } = await c.req.valid('json');
 
     try {
-        await db.update(users).set({ deviceId, birthday, contact, name, sex, role }).where(eq(users.id, id));
+        await db.update(users).set({ deviceId, birthday, contact, name, sex}).where(eq(users.id, id));
         await db.insert(logs).values({ user_id: id, activity: 'Update information', timestamp: new Date(Date.now()).toISOString() })
         return c.json({
             message: 'Account information updated'
@@ -54,10 +54,10 @@ app.patch('/', validator('json', (value, c) => {
     const { Currentpassword, password } = await c.req.valid('json');
 
     try {
-        const checkPass = await db.select({ hashPass: users.password }).from(users).where(eq(users.id, id)).get();
-        if (!checkPass?.hashPass) return c.json({ message: 'no user found' }, 401);
+        const checkPass = await db.select({ hashPass: users.password }).from(users).where(eq(users.id, id));
+        if (!checkPass[0]?.hashPass) return c.json({ message: 'no user found' }, 401);
 
-        const isPasswordMatch = await verifyHashPassword(Currentpassword, checkPass?.hashPass);
+        const isPasswordMatch = await verifyHashPassword(Currentpassword, checkPass[0]?.hashPass);
         if (!isPasswordMatch) return c.json({ message: 'Incorrect password' }, 401);
 
         const hash_pass = await hashPassword(password);
@@ -94,7 +94,7 @@ app.post('/logs', async (c) => {
 app.get('/logs', async (c) => {
     const { id } = await c.get('jwtPayload');
     try {
-        const userLogs = await db.select().from(logs).where(eq(logs.user_id, id)).orderBy(desc(logs.timestamp)).all();
+        const userLogs = await db.select().from(logs).where(eq(logs.user_id, id)).orderBy(desc(logs.timestamp));
         if (!userLogs || userLogs.length < 0) return c.json({ message: 'No user log found' }, 404);
 
         return c.json(userLogs, 200)
@@ -111,10 +111,10 @@ app.get('/:id', async(c)=>{
 
 
     try {
-        const res = await db.select({ id: users.id, deviceId: users.deviceId, name: users.name, birthday: users.birthday, sex: users.sex, email: users.email, contact: users.contact }).from(users).where(eq(users.id, Number(id))).get();
-        if (!res) return c.json({ message: 'No user found' }, 403);
+        const res = await db.select({ id: users.id, deviceId: users.deviceId, name: users.name, birthday: users.birthday, sex: users.sex, email: users.email, contact: users.contact }).from(users).where(eq(users.id, Number(id)));
+        if (!res[0]) return c.json({ message: 'No user found' }, 403);
 
-        return c.json(res, 200);
+        return c.json(res[0], 200);
     } catch (error) {
         return c.json({
             error: error

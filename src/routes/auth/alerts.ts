@@ -69,7 +69,7 @@ app.get('/', async(c)=>{
                     )
                 )
                 .orderBy(alertHistory.timestamp)
-                .all();
+                ;
 
             return c.json(results, 200);
     } catch (error) {

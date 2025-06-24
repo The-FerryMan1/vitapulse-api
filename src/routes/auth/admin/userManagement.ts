@@ -18,7 +18,7 @@ app.put('/update/:id', validator('json', (value, c) => {
     const { deviceId, birthday, contact, name, sex, role } = await c.req.valid('json');
 
     try {
-        await db.update(users).set({ deviceId, birthday, contact, name, sex, role }).where(eq(users.id, Number(id)));
+        await db.update(users).set({ deviceId, birthday, contact, name, sex}).where(eq(users.id, Number(id)));
         await db.insert(logs).values({ user_id: userID, activity: 'Update information', timestamp: new Date(Date.now()).toISOString() })
         return c.json({
             message: 'Account information updated'
@@ -38,10 +38,10 @@ app.post('/delete/:id', async(c)=>{
     console.log(password)
     try {
 
-        const admin = await db.select().from(users).where(and(eq(users.id, userID), eq(users.role, 'admin'))).get();
-        if(!admin) return c.json({message: 'forbidden'}, 402);
+        const admin = await db.select().from(users).where(and(eq(users.id, userID), eq(users.role, 'admin')));
+        if(!admin[0]) return c.json({message: 'forbidden'}, 402);
 
-        const isPassCorrect = verifyHashPassword(password, admin?.password)
+        const isPassCorrect = verifyHashPassword(password, admin[0]?.password)
         if(!isPassCorrect) return c.json({message: 'Unauthorized'}, 401);
 
         await db.delete(users).where(eq(users.id, Number(id)));
