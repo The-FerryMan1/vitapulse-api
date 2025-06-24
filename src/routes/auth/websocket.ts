@@ -28,7 +28,7 @@ app.get('/', upgradeWebSocket(async (c) => {
 
                 isTheDataNew = readings
                 ws.send(readings)
-            }, 5000)
+            }, 3000)
         },
 
         async onMessage(evt, ws) {
