@@ -19,7 +19,7 @@ app.post('/', async (c) => {
     const { bpStatus, pulseStatus, clinicalBpLabel } = getStatus;
 
     try {
-        const isBpThesame = await db.select({ timestamp: bpPulseRecords.timestamp }).from(bpPulseRecords).where(and(eq(bpPulseRecords.user_id, id), eq(bpPulseRecords.timestamp, timestamp)));
+        const isBpThesame = await db.select({ timestamp: bpPulseRecords.timestamp }).from(bpPulseRecords).where(eq(bpPulseRecords.timestamp, timestamp));
         if (isBpThesame[0]) return c.json({ message: 'Same data' })
 
 
