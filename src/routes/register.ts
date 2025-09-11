@@ -22,7 +22,7 @@ app.post('/', validator('json', (value, c) => {
 }), async (c) => {
 
     //destructing data from validated json
-    const { deviceId, name, birthday, password, email, contact, sex, role } = c.req.valid('json');
+    const {name, birthday, password, email, contact, sex, role } = c.req.valid('json');
 
     //hash the password
     const hash_pass = await hashPassword(password);
@@ -37,12 +37,9 @@ app.post('/', validator('json', (value, c) => {
 
         const doesNumberExist = await db.$count(users, eq(users.contact, contact));
         if(doesNumberExist) return c.json({message: 'Contact number is already exist, please use another contact number.'}, 400);
-
-        const doesDeviceIdExist = await db.$count(users, eq(users.deviceId, deviceId));
-        if (doesDeviceIdExist) return c.json({message: 'Device number is already exist, please use another device.'}, 400);
         
         //insert the data
-        await db.insert(users).values({ deviceId, name, birthday, role, password: hash_pass, contact, email, sex, created_At:new Date()});
+        await db.insert(users).values({name, birthday, role, password: hash_pass, contact, email, sex, created_At:new Date()});
 
         //return success message 
         return c.json({

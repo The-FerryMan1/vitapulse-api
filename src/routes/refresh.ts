@@ -18,12 +18,11 @@ app.post('/', async (c) => {
         const isRefreshValid = await verify(refresh_token, process.env.REFRESH_SECRET_TOKEN!);
 
         //destruct the token
-        const { deviceId, age, status, id, role, isVerified, email, } = isRefreshValid;
+        const { age, status, id, role, isVerified, email, } = isRefreshValid;
 
         //create a new payload and sign
         const new_access_token = {
             id: id,
-            deviceId,
             email,
             isVerified,
             status,
@@ -33,7 +32,6 @@ app.post('/', async (c) => {
         }
         const new_refresh_token = {
             id: id,
-            deviceId,
             email,
             isVerified,
             status,

@@ -34,7 +34,7 @@ app.post('/', validator('json', (value, c)=>{
         if(!doesUserExist[0]) return c.json({message: 'Account does not exist'}, 401);
 
         //if user exist, destruct the data;
-        const {deviceId, birthday, status, id, password:hash_pass, role, isVerified, email:users_email} = doesUserExist[0]
+        const {birthday, status, id, password:hash_pass, role, isVerified, email:users_email} = doesUserExist[0]
         const age = getTheAge(birthday);
 
         //check if the password match
@@ -48,7 +48,6 @@ app.post('/', validator('json', (value, c)=>{
             email: users_email,
             isVerified,
             status,
-            deviceId,
             role: role,
             exp: Math.floor(Date.now() / 1000) + 60 * 5 //5 mins
         }
@@ -60,7 +59,6 @@ app.post('/', validator('json', (value, c)=>{
             email: users_email,
             isVerified,
             status,
-            deviceId,
             role: role,
             exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60 //7 mins
         }
