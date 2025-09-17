@@ -1,7 +1,8 @@
 import * as nodemailer from 'nodemailer';
 import "dotenv/config";
 const transport = nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    post: 465,
     auth: {
         user: process.env.GOOGLE_APP_EMAIL!,
         pass: process.env.GOOGLE_APP_PASSWORD!,
