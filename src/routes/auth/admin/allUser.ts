@@ -9,7 +9,7 @@ const app = new Hono();
 
 app.get('/', async(c)=>{
     try {
-        const allUsers = await db.select({id: users.id, status:users.status, deviceId:users.deviceId, name:users.name, birthday:users.birthday, sex:users.sex, email:users.email, contact:users.contact, role: users.role, isVerified:users.isVerified}).from(users).where(eq(users.role, 'general'));
+        const allUsers = await db.select({id: users.id, status:users.status, name:users.name, birthday:users.birthday, sex:users.sex, email:users.email, contact:users.contact, role: users.role, isVerified:users.isVerified}).from(users).where(eq(users.role, 'general'));
         if (!allUsers || allUsers.length < 0) return c.json(allUsers, 404);
 
         return c.json(allUsers, 200);
@@ -20,7 +20,7 @@ app.get('/', async(c)=>{
 })
 app.get('/admin-list', async(c)=>{
     try {
-        const allUsers = await db.select({id: users.id, status:users.status, deviceId:users.deviceId, name:users.name, birthday:users.birthday, sex:users.sex, email:users.email, contact:users.contact, role: users.role, isVerified:users.isVerified}).from(users).where(eq(users.role, 'admin'));
+        const allUsers = await db.select({id: users.id, status:users.status, name:users.name, birthday:users.birthday, sex:users.sex, email:users.email, contact:users.contact, role: users.role, isVerified:users.isVerified}).from(users).where(eq(users.role, 'admin'));
         if (!allUsers || allUsers.length < 0) return c.json(allUsers, 404);
         return c.json(allUsers, 200);
     } catch (error) {       

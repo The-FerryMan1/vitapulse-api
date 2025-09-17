@@ -13,7 +13,7 @@ app.get('/', async (c) => {
     const { id } = user;
 
     try {
-        const res = await db.select({ id: users.id, deviceId: users.deviceId, name: users.name, birthday: users.birthday, sex: users.sex, email: users.email, contact: users.contact }).from(users).where(eq(users.id, id));
+        const res = await db.select({ id: users.id, name: users.name, birthday: users.birthday, sex: users.sex, email: users.email, contact: users.contact }).from(users).where(eq(users.id, id));
         if (!res[0]) return c.json({ message: 'No user found' }, 403);
 
         return c.json(res[0], 200);
@@ -31,10 +31,10 @@ app.put('/', validator('json', (value, c) => {
     return parsed.data;
 }), async (c) => {
     const { id } = await c.get('jwtPayload');
-    const { deviceId, birthday, contact, name, sex, role } = await c.req.valid('json');
+    const {birthday, contact, name, sex, role } = await c.req.valid('json');
 
     try {
-        await db.update(users).set({ deviceId, birthday, contact, name, sex}).where(eq(users.id, id));
+        await db.update(users).set({birthday, contact, name, sex}).where(eq(users.id, id));
         await db.insert(logs).values({ user_id: id, activity: 'Update information', timestamp: new Date(Date.now()).toISOString() })
         return c.json({
             message: 'Account information updated'
@@ -111,7 +111,7 @@ app.get('/:id', async(c)=>{
 
 
     try {
-        const res = await db.select({ id: users.id, deviceId: users.deviceId, name: users.name, birthday: users.birthday, sex: users.sex, email: users.email, contact: users.contact }).from(users).where(eq(users.id, Number(id)));
+        const res = await db.select({ id: users.id, name: users.name, birthday: users.birthday, sex: users.sex, email: users.email, contact: users.contact }).from(users).where(eq(users.id, Number(id)));
         if (!res[0]) return c.json({ message: 'No user found' }, 403);
 
         return c.json(res[0], 200);

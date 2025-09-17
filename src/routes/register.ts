@@ -22,7 +22,7 @@ app.post('/', validator('json', (value, c) => {
 }), async (c) => {
 
     //destructing data from validated json
-    const { name, birthday, password, email, contact, sex, role } = c.req.valid('json');
+    const { deviceId, name, birthday, password, email, contact, sex, role } = c.req.valid('json');
 
     //hash the password
     const hash_pass = await hashPassword(password);
