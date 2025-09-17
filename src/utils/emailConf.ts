@@ -1,9 +1,7 @@
 import * as nodemailer from 'nodemailer';
 import "dotenv/config";
 const transport = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    post: 465,
-    secure: false,
+    service: "gmail",
     auth: {
         user: process.env.GOOGLE_APP_EMAIL!,
         pass: process.env.GOOGLE_APP_PASSWORD!,
@@ -16,19 +14,19 @@ export const sendVerificationCode = async (email: string, code: string) => {
         from: process.env.GOOGLE_APP_EMAIL!,
         to: email,
         subject: 'Verify Your Email Address',
-        text: `Welcome to Vitapulse! Please verify your email by clicking the following link: https://vitapulse-app.onrender.com/${code}`,
+        text: `Welcome to Vitapulse! Please verify your email by clicking the following link: http://localhost:5173/${code}`,
         html: `
         <div style="font-family: Arial, sans-serif; color: #333;">
             <h2 style="color: #4CAF50;">Welcome to Vitapulse!</h2>
             <p>Thank you for signing up. Please verify your email address to get started:</p>
             <p>
-                <a href="https://vitapulse-app.onrender.com/verification/${code}"
+                <a href="http://localhost:5173/verification/${code}"
                    style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
                     Verify Email
                 </a>
             </p>
             <p>If the button doesn't work, you can also click or copy the link below into your browser:</p>
-            <p><a href="https://vitapulse-app.onrender.com/verification/${code}">https://vitapulse-app.onrender.com/verification/${code}</a></p>
+            <p><a href="http://localhost:5173/verification/${code}">http://localhost:5173/verification/${code}</a></p>
             <hr style="margin-top: 30px;">
             <p style="font-size: 12px; color: #888;">If you didn't sign up for Vitapulse, please ignore this email.</p>
         </div>
