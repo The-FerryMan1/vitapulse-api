@@ -28,13 +28,14 @@ app.get("/historical", upgradeWebSocket(async (c) => {
                     let endTime: Date = now
                     switch (filter) {
                         case 'hourly':
-                            startTime = new Date(now);
-                            startTime.setMinutes(0, 0, 0);
-                            break;
+                            startTime = new Date(now.toISOString());
+                            startTime.setUTCMinutes(0, 0, 0);
+                            endTime = new Date(startTime);
+                            endTime.setUTCHours(endTime.getUTCHours() + 1, 0, 0, 0);
 
                         case 'daily':
-                            startTime = new Date(now);
-                            startTime.setHours(0, 0, 0, 0);
+                            startTime = new Date(now.toISOString().split('T')[0] + 'T00:00:00.000Z');
+                            endTime = new Date(now.toISOString().split('T')[0] + 'T23:59:59.999Z');
                             break;
 
                         case 'weekly':
@@ -44,20 +45,18 @@ app.get("/historical", upgradeWebSocket(async (c) => {
                             break;
 
                         case 'monthly':
-                            startTime = new Date(now.getFullYear(), now.getMonth(), 1);
+                            startTime = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+                            endTime = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999));
                             break;
                         case 'custom':
                             if (!fromQuery || !toQuery) {
                                 return c.json({ errorMessage: 'Custom filter requires "from" and "to" query params' }, 400);
                             }
-
                             startTime = new Date(fromQuery);
                             endTime = new Date(toQuery);
-
                             if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
                                 return c.json({ errorMessage: 'Invalid "from" or "to" date format' }, 400);
                             }
-
                             break;
                         default:
                             return c.json({ errorMessage: 'Invalid filter option' }, 400);
@@ -110,7 +109,7 @@ app.get("/historical", upgradeWebSocket(async (c) => {
 
 
 
-app.get("/dashboard", upgradeWebSocket(async()=>{
+app.get("/dashboard", upgradeWebSocket(async () => {
     let intervalId: Timer;
     const ageGroups = [
         { label: '0–17', min: 0, max: 17 },
@@ -124,7 +123,7 @@ app.get("/dashboard", upgradeWebSocket(async()=>{
         async onOpen(evt, ws) {
             console.log('webscoket connection opened')
             try {
-                intervalId = setInterval(async()=>{
+                intervalId = setInterval(async () => {
                     const user = await db.select().from(users);
 
                     const counts: Record<string, number> = {};
@@ -158,7 +157,7 @@ app.get("/dashboard", upgradeWebSocket(async()=>{
                             )
                         )
                     );
-                    
+
                     ws.send(JSON.stringify({
                         counts,
                         logins,
@@ -167,7 +166,7 @@ app.get("/dashboard", upgradeWebSocket(async()=>{
                         abnormal
                     }))
                 }, 3000)
-                
+
             } catch (error) {
                 console.error('[GET /] Error:', error);
             }
@@ -183,24 +182,24 @@ app.get("/dashboard", upgradeWebSocket(async()=>{
 }))
 
 
-app.get("/notification", upgradeWebSocket(async(c)=>{
-    const {id, role} = c.get('jwtPayload')
-    let intervalId:Timer;
+app.get("/notification", upgradeWebSocket(async (c) => {
+    const { id, role } = c.get('jwtPayload')
+    let intervalId: Timer;
     return {
         onOpen(evt, ws) {
             console.log("Websocket Notification open");
-            intervalId = setInterval(async()=>{
+            intervalId = setInterval(async () => {
 
 
-                if(role !== 'admin'){
+                if (role !== 'admin') {
                     try {
-                        const alertHs = await db.select().from(alertHistory).where(and(eq(alertHistory.user_id, id),eq(alertHistory.isRead, false))).orderBy(desc(alertHistory.timestamp)).limit(3);
+                        const alertHs = await db.select().from(alertHistory).where(and(eq(alertHistory.user_id, id), eq(alertHistory.isRead, false))).orderBy(desc(alertHistory.timestamp)).limit(3);
 
                         ws.send(JSON.stringify(alertHs))
                     } catch (error) {
                         console.log(error)
                     }
-                }else{
+                } else {
 
                     try {
                         const alertHs = await db.select().from(alertHistory).where(eq(alertHistory.user_id, id)).orderBy(desc(alertHistory.timestamp)).limit(3);
@@ -209,9 +208,9 @@ app.get("/notification", upgradeWebSocket(async(c)=>{
                     } catch (error) {
                         console.log(error)
                     }
-                    
+
                 }
-                
+
             }, 1000)
         },
         onMessage(evt, ws) {

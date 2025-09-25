@@ -5,6 +5,7 @@ import { getBpAndPulseByAge } from "../../utils/bpByAge";
 import { eq, and, gte, lte, asc, desc } from "drizzle-orm";
 import { calculateZScores } from "../../utils/zScore";
 import { sendAlertEmail } from "../../utils/emailConf";
+import { startTransition } from "hono/jsx";
 const app = new Hono();
 
 app.post('/', async (c) => {
@@ -59,50 +60,57 @@ app.get('/', async (c) => {
     const fromQuery = await c.req.query('from');
     const toQuery = await c.req.query('to');
     const now = new Date();
-    console.log(filter)
 
     try {
-        let startTime: Date;
-        let endTime: Date = now;
-
+        let startTime;
+        let endTime;
+        
         switch (filter) {
             case 'hourly':
-                startTime = new Date(now);
-                startTime.setMinutes(0, 0, 0);
+                startTime = new Date(now.toISOString());
+                startTime.setUTCMinutes(0, 0, 0);
+                endTime = new Date(startTime);
+                endTime.setUTCHours(endTime.getUTCHours() + 1, 0, 0, 0);
+                
                 break;
 
             case 'daily':
-                startTime = new Date(now);
-                startTime.setHours(0, 0, 0, 0);
+                startTime = new Date(now.toISOString().split('T')[0] + 'T00:00:00.000Z');
+                endTime = new Date(now.toISOString().split('T')[0] + 'T23:59:59.999Z');
                 break;
+                
 
             case 'weekly':
-                startTime = new Date(now);
-                startTime.setDate(now.getDate() - now.getDay());
-                startTime.setHours(0, 0, 0, 0);
+                startTime = new Date(now.toISOString());
+                startTime.setUTCDate(now.getUTCDate() - now.getUTCDay());
+                startTime.setUTCHours(0, 0, 0, 0);
+                endTime = new Date(startTime);
+                endTime.setUTCDate(endTime.getUTCDate() + 6);
+                endTime.setUTCHours(23, 59, 59, 999);
                 break;
-
             case 'monthly':
-                startTime = new Date(now.getFullYear(), now.getMonth(), 1);
+                startTime = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+                endTime = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999));
                 break;
 
             case 'custom':
                 if (!fromQuery || !toQuery) {
                     return c.json({ errorMessage: 'Custom filter requires "from" and "to" query params' }, 400);
                 }
-
                 startTime = new Date(fromQuery);
                 endTime = new Date(toQuery);
-
                 if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
                     return c.json({ errorMessage: 'Invalid "from" or "to" date format' }, 400);
                 }
-
                 break;
 
             default:
                 return c.json({ errorMessage: 'Invalid filter option' }, 400);
         }
+
+        console.log('startTime (UTC):', startTime.toISOString());
+        console.log('endTime (UTC):', endTime.toISOString());
+
         const results = await db
             .select({
                 id: bpPulseRecords.id,
@@ -119,15 +127,17 @@ app.get('/', async (c) => {
                 and(
                     eq(bpPulseRecords.user_id, id),
                     gte(bpPulseRecords.timestamp, startTime.toISOString()),
-                    lte(bpPulseRecords.timestamp, endTime.toISOString())
+                    lte(bpPulseRecords.timestamp, endTime?.toISOString())
                 )
             )
-            .orderBy(desc(bpPulseRecords.timestamp))
-            ;
+            .orderBy(desc(bpPulseRecords.timestamp));
+            
 
+         console.log(results)
         // const resultWithPpAndMap = ppMapCalculate(results);
         const resultWithzScore = calculateZScores(results)
-
+        
+        
 
         return c.json(resultWithzScore, 200);
     } catch (error) {
@@ -157,8 +167,7 @@ app.get('/summary/:id', async (c) => {
                 break;
 
             case 'daily':
-                startTime = new Date(now);
-                startTime.setHours(0, 0, 0, 0);
+               startTime = new Date(now.toISOString().split('T')[0] + 'T00:00:00.000Z');
                 break;
 
             case 'weekly':
@@ -209,7 +218,7 @@ app.get('/summary/:id', async (c) => {
             )
             .orderBy(bpPulseRecords.timestamp)
             ;
-
+       
         // const resultWithPpAndMap = ppMapCalculate(results);
         const resultWithzScore = calculateZScores(results)
 
