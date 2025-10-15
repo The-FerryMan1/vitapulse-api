@@ -1,0 +1,19 @@
+# Dependency directories (already handled by bun install)
+node_modules
+npm-debug.log
+
+# Logs and runtime artifacts
+logs
+*.log
+tmp
+.DS_Store
+.env
+
+# Bun specific
+*.tsbuildinfo
+
+# Git
+.git
+.gitignore
+
+# Folders not needed in the image

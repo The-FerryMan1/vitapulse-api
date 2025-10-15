@@ -3,8 +3,8 @@ import { createBunWebSocket } from "hono/bun";
 import type { ServerWebSocket } from "bun";
 
 // Static File Imports
-import { serveStatic } from 'hono/bun';
-import path from 'path';
+import { serveStatic } from "hono/bun";
+import path from "path";
 
 // Middleware Imports
 import { logger } from "hono/logger";
@@ -31,7 +31,6 @@ import { userManagementRoute } from "./routes/auth/admin/userManagement";
 import { ActivityLogsRoutes } from "./routes/auth/admin/ActivityLogs";
 import { SSERoute } from "./routes/auth/SSE";
 import { passwordResetRoute } from "./routes/passwordReset";
-
 
 // --- 1. DEFINE THE API APPLICATION ---
 const apiApp = new Hono();
@@ -70,58 +69,53 @@ apiApp.route("/auth/admin/readings", readingsRoute);
 apiApp.route("/auth/admin/userManagement", userManagementRoute);
 apiApp.route("/auth/admin/logs", ActivityLogsRoutes);
 
-
 // --- 2. DEFINE THE MAIN SERVER APPLICATION ---
 const serverApp = new Hono();
 const { websocket } = createBunWebSocket<ServerWebSocket>();
 
-
 // --- 3. STATIC FILE CONFIGURATION (REFINING ROUTING ORDER) ---
 
 // CORRECT PATH RESOLUTION: We must go up one level (..) from /src to reach /static
-const STATIC_ROOT = path.join(import.meta.dir, '..', 'static'); 
-console.log(`[Hono] Serving static files from: ${STATIC_ROOT}`); 
-
+const STATIC_ROOT = path.join(import.meta.dir, "..", "static");
+console.log(`[Hono] Serving static files from: ${STATIC_ROOT}`);
 
 // A. MOUNT THE API APPLICATION AT /api
 serverApp.route("/api", apiApp);
 
-
 // 💡 B. EXPLICITLY SERVE INDEX.HTML FOR ROOT (/)
 // This ensures that when the browser hits the root, it gets the index file
 // and prevents the root request from falling through to the catch-all.
-serverApp.get('/', 
+serverApp.get(
+  "/",
   serveStatic({
     root: STATIC_ROOT,
-    path: 'index.html',
-  })
+    path: "index.html",
+  }),
 );
-
 
 // 💡 C. SERVE ALL STATIC ASSETS (E.G., /assets/main.js, /favicon.ico)
-// This block looks for physical files. If the file is not found, 
+// This block looks for physical files. If the file is not found,
 // serveStatic defaults to passing control, which is what we want for SPA routing.
 serverApp.use(
-  '/*', 
+  "/*",
   serveStatic({
-    root: STATIC_ROOT, 
-  })
+    root: STATIC_ROOT,
+  }),
 );
-
 
 // 💡 D. SPA ROUTER FALLBACK (CATCH-ALL)
 // This only executes if the request didn't match the API or a physical asset.
 // It serves index.html to enable client-side routing (e.g., /about).
-serverApp.get('*', 
+serverApp.get(
+  "*",
   serveStatic({
     root: STATIC_ROOT,
-    path: 'index.html', 
-  })
+    path: "index.html",
+  }),
 );
 
-
 export default {
-  port: 8888,
-  fetch: serverApp.fetch, 
+  port: 3000,
+  fetch: serverApp.fetch,
   websocket,
 };
