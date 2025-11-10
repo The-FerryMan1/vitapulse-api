@@ -35,7 +35,7 @@ const { websocket } = createBunWebSocket<ServerWebSocket>();
 app.use(logger());
 app.use(
   cors({
-    origin: [Bun.env.APP_DOMAIN_NAME!],
+    origin: ["http://localhost:5173"],
     credentials: true,
   }),
 );
