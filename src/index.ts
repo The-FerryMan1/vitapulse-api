@@ -29,7 +29,7 @@ import { SSERoute } from "./routes/auth/SSE";
 import { passwordResetRoute } from "./routes/passwordReset";
 import { googelSheetGetHelper } from "./utils/getDataFromGoogleSheet";
 
-const app = new Hono().basePath("/api/");
+const app = new Hono().basePath("/api");
 const { websocket } = createBunWebSocket<ServerWebSocket>();
 // middleware setup
 app.use(logger());

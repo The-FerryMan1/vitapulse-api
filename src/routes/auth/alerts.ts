@@ -8,64 +8,16 @@ const app = new Hono();
 
 app.get('/', async(c)=>{
     const {id} = c.get('jwtPayload');
-    // console.log(id)
-    //     const filter = c.req.query('filter') || 'daily'; // default to daily
-    //     const fromQuery =  c.req.query('from');
-    //     const toQuery = c.req.query('to');
-    //     const now = new Date();
-    //     console.log(filter)
     
         try {   
-            // let startTime: Date;
-            // let endTime: Date = now;
-    
-            // switch (filter) {
-            //     case 'hourly':
-            //         startTime = new Date(now);
-            //         startTime.setMinutes(0, 0, 0);
-            //         break;
-    
-            //     case 'daily':
-            //         startTime = new Date(now);
-            //         startTime.setHours(0, 0, 0, 0);
-            //         break;
-    
-            //     case 'weekly':
-            //         startTime = new Date(now);
-            //         startTime.setDate(now.getDate() - now.getDay());
-            //         startTime.setHours(0, 0, 0, 0);
-            //         break;
-    
-            //     case 'monthly':
-            //         startTime = new Date(now.getFullYear(), now.getMonth(), 1);
-            //         break;
-    
-            //     case 'custom':
-            //         if (!fromQuery || !toQuery) {
-            //             return c.json({ errorMessage: 'Custom filter requires "from" and "to" query params' }, 400);
-            //         }
-    
-            //         startTime = new Date(fromQuery);
-            //         endTime = new Date(toQuery);
-    
-            //         if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
-            //             return c.json({ errorMessage: 'Invalid "from" or "to" date format' }, 400);
-            //         }
-    
-            //         break;
-    
-            //     default:
-            //         return c.json({ errorMessage: 'Invalid filter option' }, 400);
-            // }
             const results = await db
                 .select()
                 .from(alertHistory)
                 .where(
                     
                     and(
-                        eq(alertHistory.user_id, id),
-                        // gte(alertHistory.timestamp, startTime.toISOString()),
-                        // lte(alertHistory.timestamp, endTime.toISOString())
+                        eq(alertHistory.user_id, id)
+    
                     )
                 )
                 .orderBy(alertHistory.timestamp)
@@ -114,5 +66,26 @@ app.patch('/', async(c)=>{
         })
     }
 })
+
+app.post('/delete', async(c)=>{
+    const {id:userID} = await c.get('jwtPayload');
+  
+    const payload = await c.req.json() as {id: number}[];
+      console.log(payload)
+        if(!payload) return c.json({message: 'No payload provided'}, 404)
+        try {
+            payload.forEach(async(ele)=>{
+                console.log(ele, "123123")
+               const res = await db.delete(alertHistory).where(and(eq(alertHistory.id, ele.id), eq(alertHistory.user_id, Number(userID))));
+            })
+            return c.json({message: payload}, 200)
+        } catch (error) {
+            console.error(error)
+            return c.json({message: "unexpected error occured", error});
+        }
+    
+})
+
+
 
 export {app as alertRoute};

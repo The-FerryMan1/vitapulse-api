@@ -5,7 +5,6 @@ import { getBpAndPulseByAge } from "../../utils/bpByAge";
 import { eq, and, gte, lte, asc, desc } from "drizzle-orm";
 import { calculateZScores } from "../../utils/zScore";
 import { sendAlertEmail } from "../../utils/emailConf";
-import { startTransition } from "hono/jsx";
 const app = new Hono();
 
 app.post('/', async (c) => {
@@ -267,6 +266,27 @@ app.get('/all/:id', async (c)=>{
         return c.json({ errorMessage: 'Internal server error' }, 500);
     }
 })
+
+app.post('/delete', async(c)=>{
+    const {id:userID} = await c.get('jwtPayload');
+
+    const payload = await c.req.json() as {id: number}[];
+    if(!payload) return c.json({message: 'No payload provided'}, 404)
+    try {
+
+
+        payload.forEach(async(ele)=>{
+            console.log(ele, "123123")
+            await db.delete(bpPulseRecords).where(and(eq(bpPulseRecords.id, ele.id), eq(bpPulseRecords.user_id, Number(userID))));
+        })
+        return c.json({message: payload}, 200)
+    } catch (error) {
+        console.error(error)
+        return c.json({message: "unexpected error occured", error});
+    }
+
+
+ })
 
 
 
