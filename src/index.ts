@@ -40,8 +40,12 @@ app.use(
   }),
 );
 
-app.use("/auth/*", verifyUser);
-app.use("/auth/admin/*", verifyAdmin);
+app.get("/health", (c) => {
+  return c.json({ 
+    status: "ok", 
+    timestamp: new Date().toISOString() 
+  });
+});
 
 app.get("/debug", async (c) => {
   const res = await googelSheetGetHelper(
@@ -50,6 +54,9 @@ app.get("/debug", async (c) => {
 
   return c.json(res);
 });
+
+app.use("/auth/*", verifyUser);
+app.use("/auth/admin/*", verifyAdmin);
 
 // routes setup
 app.route("/register", registerRoute);
@@ -78,7 +85,10 @@ app.route("/auth/admin/userManagement", userManagementRoute);
 app.route("/auth/admin/logs", ActivityLogsRoutes);
 
 export default {
-  port: Bun.env.PORT || 8000,
+  port: Number(process.env.PORT || Bun.env.PORT) || 8000,
+  fetch: app.fetch,
+  websocket,
+};
   fetch: app.fetch,
   websocket,
 };
