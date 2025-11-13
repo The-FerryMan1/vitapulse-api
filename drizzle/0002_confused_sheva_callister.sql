@@ -1,0 +1,1 @@
+ALTER TABLE "users_table" ALTER COLUMN "created_At" SET DEFAULT '2025-09-17 06:28:45.201';

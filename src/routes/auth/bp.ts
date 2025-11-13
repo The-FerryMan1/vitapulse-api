@@ -28,23 +28,24 @@ app.post('/', async (c) => {
             ['High', 'Low'].includes(pulseStatus);
 
         if (isAbnormal) {
-           const isAlertSent =  await sendAlertEmail(email, `Blood Pressure: ${clinicalBpLabel}. Consider going to the nearest clinic.`);
-            
+            const isAlertSent = await sendAlertEmail(email, `Blood Pressure: ${clinicalBpLabel}. Consider going to the nearest clinic.`);
 
-            if (isAlertSent){
+
+            if (isAlertSent) {
                 await db.insert(alertHistory).values({
                     user_id: id,
                     message: `Bp: ${clinicalBpLabel} Pulse: ${pulseStatus}`,
                     timestamp: new Date(Date.now()).toISOString(),
                 });
             }
-           
+
         }
 
-       
+
 
         await db.insert(bpPulseRecords).values({
-            user_id: id, diastolic: diastolic, systolic: systolic, bpStatus: bpStatus, clinicalBpLabel, pulseStatus: pulseStatus, pulse: pulse, timestamp: String(timestamp)});
+            user_id: id, diastolic: diastolic, systolic: systolic, bpStatus: bpStatus, clinicalBpLabel, pulseStatus: pulseStatus, pulse: pulse, timestamp: String(timestamp)
+        });
 
         return c.json({ message: 'Blood pressure saved' }, 201)
     } catch (error) {
@@ -59,50 +60,57 @@ app.get('/', async (c) => {
     const fromQuery = await c.req.query('from');
     const toQuery = await c.req.query('to');
     const now = new Date();
-    console.log(filter)
 
     try {
-        let startTime: Date;
-        let endTime: Date = now;
+        let startTime;
+        let endTime;
 
         switch (filter) {
             case 'hourly':
-                startTime = new Date(now);
-                startTime.setMinutes(0, 0, 0);
+                startTime = new Date(now.toISOString());
+                startTime.setUTCMinutes(0, 0, 0);
+                endTime = new Date(startTime);
+                endTime.setUTCHours(endTime.getUTCHours() + 1, 0, 0, 0);
+
                 break;
 
             case 'daily':
-                startTime = new Date(now);
-                startTime.setHours(0, 0, 0, 0);
+                startTime = new Date(now.toISOString().split('T')[0] + 'T00:00:00.000Z');
+                endTime = new Date(now.toISOString().split('T')[0] + 'T23:59:59.999Z');
                 break;
+
 
             case 'weekly':
-                startTime = new Date(now);
-                startTime.setDate(now.getDate() - now.getDay());
-                startTime.setHours(0, 0, 0, 0);
+                startTime = new Date(now.toISOString());
+                startTime.setUTCDate(now.getUTCDate() - now.getUTCDay());
+                startTime.setUTCHours(0, 0, 0, 0);
+                endTime = new Date(startTime);
+                endTime.setUTCDate(endTime.getUTCDate() + 6);
+                endTime.setUTCHours(23, 59, 59, 999);
                 break;
-
             case 'monthly':
-                startTime = new Date(now.getFullYear(), now.getMonth(), 1);
+                startTime = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+                endTime = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999));
                 break;
 
             case 'custom':
                 if (!fromQuery || !toQuery) {
                     return c.json({ errorMessage: 'Custom filter requires "from" and "to" query params' }, 400);
                 }
-
                 startTime = new Date(fromQuery);
                 endTime = new Date(toQuery);
-
                 if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
                     return c.json({ errorMessage: 'Invalid "from" or "to" date format' }, 400);
                 }
-
                 break;
 
             default:
                 return c.json({ errorMessage: 'Invalid filter option' }, 400);
         }
+
+        console.log('startTime (UTC):', startTime.toISOString());
+        console.log('endTime (UTC):', endTime.toISOString());
+
         const results = await db
             .select({
                 id: bpPulseRecords.id,
@@ -119,14 +127,16 @@ app.get('/', async (c) => {
                 and(
                     eq(bpPulseRecords.user_id, id),
                     gte(bpPulseRecords.timestamp, startTime.toISOString()),
-                    lte(bpPulseRecords.timestamp, endTime.toISOString())
+                    lte(bpPulseRecords.timestamp, endTime?.toISOString())
                 )
             )
-            .orderBy(desc(bpPulseRecords.timestamp))
-            ;
+            .orderBy(desc(bpPulseRecords.timestamp));
 
+
+        console.log(results)
         // const resultWithPpAndMap = ppMapCalculate(results);
         const resultWithzScore = calculateZScores(results)
+
 
 
         return c.json(resultWithzScore, 200);
@@ -152,37 +162,41 @@ app.get('/summary/:id', async (c) => {
 
         switch (filter) {
             case 'hourly':
-                startTime = new Date(now);
-                startTime.setMinutes(0, 0, 0);
+                startTime = new Date(now.toISOString());
+                startTime.setUTCMinutes(0, 0, 0);
+                endTime = new Date(startTime);
+                endTime.setUTCHours(endTime.getUTCHours() + 1, 0, 0, 0);
+
                 break;
 
             case 'daily':
-                startTime = new Date(now);
-                startTime.setHours(0, 0, 0, 0);
+                startTime = new Date(now.toISOString().split('T')[0] + 'T00:00:00.000Z');
+                endTime = new Date(now.toISOString().split('T')[0] + 'T23:59:59.999Z');
                 break;
+
 
             case 'weekly':
-                startTime = new Date(now);
-                startTime.setDate(now.getDate() - now.getDay());
-                startTime.setHours(0, 0, 0, 0);
+                startTime = new Date(now.toISOString());
+                startTime.setUTCDate(now.getUTCDate() - now.getUTCDay());
+                startTime.setUTCHours(0, 0, 0, 0);
+                endTime = new Date(startTime);
+                endTime.setUTCDate(endTime.getUTCDate() + 6);
+                endTime.setUTCHours(23, 59, 59, 999);
                 break;
-
             case 'monthly':
-                startTime = new Date(now.getFullYear(), now.getMonth(), 1);
+                startTime = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+                endTime = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999));
                 break;
 
             case 'custom':
                 if (!fromQuery || !toQuery) {
                     return c.json({ errorMessage: 'Custom filter requires "from" and "to" query params' }, 400);
                 }
-
                 startTime = new Date(fromQuery);
                 endTime = new Date(toQuery);
-
                 if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
                     return c.json({ errorMessage: 'Invalid "from" or "to" date format' }, 400);
                 }
-
                 break;
 
             default:
@@ -220,6 +234,59 @@ app.get('/summary/:id', async (c) => {
         return c.json({ errorMessage: 'Internal server error' }, 500);
     }
 })
+
+
+
+app.get('/all/:id', async (c)=>{
+    const { id } = await c.req.param()
+
+    try {
+        const results = await db
+            .select({
+                id: bpPulseRecords.id,
+                systolic: bpPulseRecords.systolic,
+                diastolic: bpPulseRecords.diastolic,
+                clinicalBpLabel: bpPulseRecords.clinicalBpLabel,
+                bpStatus: bpPulseRecords.bpStatus,
+                pulse: bpPulseRecords.pulse,
+                pulseStatus: bpPulseRecords.pulseStatus,
+                timestamp: bpPulseRecords.timestamp,
+            })
+            .from(bpPulseRecords)
+            .where(eq(bpPulseRecords.user_id, Number(id)))
+            .orderBy(bpPulseRecords.timestamp);
+
+        // const resultWithPpAndMap = ppMapCalculate(results);
+        const resultWithzScore = calculateZScores(results)
+
+
+        return c.json(resultWithzScore, 200);
+    } catch (error) {
+        console.error('[GET /] Error:', error);
+        return c.json({ errorMessage: 'Internal server error' }, 500);
+    }
+})
+
+app.post('/delete', async(c)=>{
+    const {id:userID} = await c.get('jwtPayload');
+
+    const payload = await c.req.json() as {id: number}[];
+    if(!payload) return c.json({message: 'No payload provided'}, 404)
+    try {
+
+
+        payload.forEach(async(ele)=>{
+            console.log(ele, "123123")
+            await db.delete(bpPulseRecords).where(and(eq(bpPulseRecords.id, ele.id), eq(bpPulseRecords.user_id, Number(userID))));
+        })
+        return c.json({message: payload}, 200)
+    } catch (error) {
+        console.error(error)
+        return c.json({message: "unexpected error occured", error});
+    }
+
+
+ })
 
 
 

@@ -17,8 +17,9 @@ app.put('/update/:id', validator('json', (value, c) => {
     const { id } = await c.req.param();
     const {birthday, contact, name, sex, role } = await c.req.valid('json');
 
+    const roles = role as 'admin'|'general'
     try {
-        await db.update(users).set({birthday, contact, name, sex}).where(eq(users.id, Number(id)));
+        await db.update(users).set({birthday, contact, role:roles, name, sex}).where(eq(users.id, Number(id)));
         await db.insert(logs).values({ user_id: userID, activity: 'Update information', timestamp: new Date(Date.now()).toISOString() })
         return c.json({
             message: 'Account information updated'

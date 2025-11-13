@@ -22,7 +22,6 @@ app.get('/', upgradeWebSocket(async (c) => {
                 const readings = JSON.stringify({...res})
 
                 if (readings === isTheDataNew){
-                    console.log('No data changes')
                     return
                 }
 

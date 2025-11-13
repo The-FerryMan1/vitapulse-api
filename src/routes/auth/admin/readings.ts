@@ -33,37 +33,41 @@ app.get('/:id', async (c) => {
 
         switch (filter) {
             case 'hourly':
-                startTime = new Date(now);
-                startTime.setMinutes(0, 0, 0);
+                startTime = new Date(now.toISOString());
+                startTime.setUTCMinutes(0, 0, 0);
+                endTime = new Date(startTime);
+                endTime.setUTCHours(endTime.getUTCHours() + 1, 0, 0, 0);
+                
                 break;
 
             case 'daily':
-                startTime = new Date(now);
-                startTime.setHours(0, 0, 0, 0);
+                startTime = new Date(now.toISOString().split('T')[0] + 'T00:00:00.000Z');
+                endTime = new Date(now.toISOString().split('T')[0] + 'T23:59:59.999Z');
                 break;
+                
 
             case 'weekly':
-                startTime = new Date(now);
-                startTime.setDate(now.getDate() - now.getDay());
-                startTime.setHours(0, 0, 0, 0);
+                startTime = new Date(now.toISOString());
+                startTime.setUTCDate(now.getUTCDate() - now.getUTCDay());
+                startTime.setUTCHours(0, 0, 0, 0);
+                endTime = new Date(startTime);
+                endTime.setUTCDate(endTime.getUTCDate() + 6);
+                endTime.setUTCHours(23, 59, 59, 999);
                 break;
-
             case 'monthly':
-                startTime = new Date(now.getFullYear(), now.getMonth(), 1);
+                startTime = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+                endTime = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999));
                 break;
 
             case 'custom':
                 if (!fromQuery || !toQuery) {
                     return c.json({ errorMessage: 'Custom filter requires "from" and "to" query params' }, 400);
                 }
-
                 startTime = new Date(fromQuery);
                 endTime = new Date(toQuery);
-
                 if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
                     return c.json({ errorMessage: 'Invalid "from" or "to" date format' }, 400);
                 }
-
                 break;
 
             default:
@@ -113,38 +117,43 @@ app.get('/z-scores/:id', async (c) => {
 
         switch (filter) {
             case 'hourly':
-                startTime = new Date(now);
-                startTime.setMinutes(0, 0, 0);
+                startTime = new Date(now.toISOString());
+                startTime.setUTCMinutes(0, 0, 0);
+                endTime = new Date(startTime);
+                endTime.setUTCHours(endTime.getUTCHours() + 1, 0, 0, 0);
+                
                 break;
 
             case 'daily':
-                startTime = new Date(now);
-                startTime.setHours(0, 0, 0, 0);
+                startTime = new Date(now.toISOString().split('T')[0] + 'T00:00:00.000Z');
+                endTime = new Date(now.toISOString().split('T')[0] + 'T23:59:59.999Z');
                 break;
+                
 
             case 'weekly':
-                startTime = new Date(now);
-                startTime.setDate(now.getDate() - now.getDay());
-                startTime.setHours(0, 0, 0, 0);
+                startTime = new Date(now.toISOString());
+                startTime.setUTCDate(now.getUTCDate() - now.getUTCDay());
+                startTime.setUTCHours(0, 0, 0, 0);
+                endTime = new Date(startTime);
+                endTime.setUTCDate(endTime.getUTCDate() + 6);
+                endTime.setUTCHours(23, 59, 59, 999);
                 break;
-
             case 'monthly':
-                startTime = new Date(now.getFullYear(), now.getMonth(), 1);
+                startTime = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+                endTime = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999));
                 break;
 
             case 'custom':
                 if (!fromQuery || !toQuery) {
                     return c.json({ errorMessage: 'Custom filter requires "from" and "to" query params' }, 400);
                 }
-
                 startTime = new Date(fromQuery);
                 endTime = new Date(toQuery);
-
                 if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
                     return c.json({ errorMessage: 'Invalid "from" or "to" date format' }, 400);
                 }
-
                 break;
+
 
             default:
                 return c.json({ errorMessage: 'Invalid filter option' }, 400);
