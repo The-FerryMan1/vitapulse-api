@@ -77,6 +77,8 @@ app.route("/auth/admin/readings", readingsRoute);
 app.route("/auth/admin/userManagement", userManagementRoute);
 app.route("/auth/admin/logs", ActivityLogsRoutes);
 
+const PORT = Number(process.env.PORT) || 3000;
+
 export default {
   port: Bun.env.PORT || 8000,
   fetch: app.fetch,
