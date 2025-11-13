@@ -1,0 +1,19 @@
+
+
+render dashboard:
+    Environment:
+        Environment Variables:
+            Insert these Environment Variables:
+                ACCESS_SECRET_TOKEN=
+                APP_DOMAIN_NAME=
+                COOKIE_SECRET_TOKEN=
+                DATABASE_URL=
+                GOOGLE_APP_PASSWORD=
+                PRODUCTION=production
+                REFRESH_SECRET_TOKEN=
+    Settings:
+        Build & Deploy:
+            Build Command:
+                bun install
+            Start Command:
+                bun run start
