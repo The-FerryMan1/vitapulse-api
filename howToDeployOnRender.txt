@@ -3,7 +3,7 @@
 render dashboard:
     Environment:
         Environment Variables:
-            Insert these Environment Variables:
+            --Insert these Environment Variables--
                 ACCESS_SECRET_TOKEN=
                 APP_DOMAIN_NAME=
                 COOKIE_SECRET_TOKEN=

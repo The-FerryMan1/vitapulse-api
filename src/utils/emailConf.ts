@@ -25,7 +25,7 @@ export const sendVerificationCode = async (email: string, code: string) => {
                 </a>
             </p>
             <p>If the button doesn't work, you can also click or copy the link below into your browser:</p>
-            <p><a href="${process.env.APP_DOMAIN_NAME!}/verification/${code}">${Bun.env.APP_DOMAIN_NAME!}verification/${code}</a></p>
+            <p><a href="${process.env.APP_DOMAIN_NAME!}/verification/${code}">${Bun.env.APP_DOMAIN_NAME!}/verification/${code}</a></p>
             <hr style="margin-top: 30px;">
             <p style="font-size: 12px; color: #888;">If you didn't sign up for Vitapulse, please ignore this email.</p>
         </div>
@@ -86,7 +86,7 @@ export const sendResetPassword = async (email: string, token: string) => {
     to: email,
     subject: "Password Reset",
     html: `<p>You requested a password reset.</p>
-               <p>Click <a href="${Bun.env.APP_DOMAIN_NAME!}reset-password/${token}">here</a> to reset your password. This link will expire in 1 hour.</p>`,
+               <p>Click <a href="${Bun.env.APP_DOMAIN_NAME!}/reset-password/${token}">here</a> to reset your password. This link will expire in 1 hour.</p>`,
   };
 
   try {
