@@ -78,7 +78,7 @@ app.route("/auth/admin/userManagement", userManagementRoute);
 app.route("/auth/admin/logs", ActivityLogsRoutes);
 
 export default {
-  port: 8888,
+  port: Bun.env.PORT || 8000,
   fetch: app.fetch,
   websocket,
 };

@@ -11,6 +11,7 @@ render dashboard:
                 GOOGLE_APP_PASSWORD=
                 PRODUCTION=production
                 REFRESH_SECRET_TOKEN=
+                PORT= 30000
     Settings:
         Build & Deploy:
             Build Command:
