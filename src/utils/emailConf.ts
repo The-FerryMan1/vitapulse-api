@@ -8,6 +8,7 @@ const transport = nodemailer.createTransport({
     user: process.env.GOOGLE_APP_EMAIL!,
     pass: process.env.GOOGLE_APP_PASSWORD!,
   },
+  family: 4,
 });
 
 export const sendVerificationCode = async (email: string, code: string) => {
