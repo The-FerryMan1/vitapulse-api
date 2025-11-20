@@ -51,6 +51,13 @@ app.get("/debug", async (c) => {
   return c.json(res);
 });
 
+app.get("/health", (c) => {
+  return c.json({ 
+    status: "ok", 
+    timestamp: new Date().toISOString() 
+  });
+});
+
 // routes setup
 app.route("/register", registerRoute);
 app.route("/email-verification", emailSendRoute);
