@@ -28,6 +28,7 @@ import { ActivityLogsRoutes } from "./routes/auth/admin/ActivityLogs";
 import { SSERoute } from "./routes/auth/SSE";
 import { passwordResetRoute } from "./routes/passwordReset";
 import { googelSheetGetHelper } from "./utils/getDataFromGoogleSheet";
+import { json } from "drizzle-orm/gel-core";
 
 const app = new Hono().basePath("/api");
 const { websocket } = createBunWebSocket<ServerWebSocket>();
@@ -49,6 +50,12 @@ app.get("/debug", async (c) => {
   );
 
   return c.json(res);
+});
+
+app.get("/env", (c) => {
+  return c.json({
+    allowed_origin: Bun.env.APP_DOMAIN_NAME!,
+  });
 });
 
 // routes setup
@@ -76,6 +83,8 @@ app.route("/auth/admin/users", AdminRoute);
 app.route("/auth/admin/readings", readingsRoute);
 app.route("/auth/admin/userManagement", userManagementRoute);
 app.route("/auth/admin/logs", ActivityLogsRoutes);
+
+console.log(`Allowed Origin: ${Bun.env.APP_DOMAIN_NAME!}`);
 
 export default {
   port: Bun.env.PORT || 8000,
