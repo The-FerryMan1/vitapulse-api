@@ -35,8 +35,14 @@ const { websocket } = createBunWebSocket<ServerWebSocket>();
 app.use(logger());
 app.use(
   cors({
-    origin: [Bun.env.APP_DOMAIN_NAME!],
+    origin: [
+      "http://localhost:5173",
+      "https://vitapulse.io",
+      "https://www.vitapulse.io"
+    ],
     credentials: true,
+    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowHeaders: ['Content-Type', 'Authorization'],
   }),
 );
 
