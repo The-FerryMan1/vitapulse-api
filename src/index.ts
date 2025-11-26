@@ -28,7 +28,6 @@ import { ActivityLogsRoutes } from "./routes/auth/admin/ActivityLogs";
 import { SSERoute } from "./routes/auth/SSE";
 import { passwordResetRoute } from "./routes/passwordReset";
 import { googelSheetGetHelper } from "./utils/getDataFromGoogleSheet";
-import { json } from "drizzle-orm/gel-core";
 
 const app = new Hono().basePath("/api");
 const { websocket } = createBunWebSocket<ServerWebSocket>();
