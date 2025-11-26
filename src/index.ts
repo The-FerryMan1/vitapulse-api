@@ -40,8 +40,13 @@ app.use(
   }),
 );
 
-app.use("/auth/*", verifyUser);
-app.use("/auth/admin/*", verifyAdmin);
+app.get("/health", (c) => {
+  return c.json({ 
+    status: "ok", 
+    timestamp: new Date().toISOString(),
+    port: process.env.PORT || Bun.env.PORT || 8000
+  });
+});
 
 app.get("/debug", async (c) => {
   const res = await googelSheetGetHelper(
@@ -50,6 +55,27 @@ app.get("/debug", async (c) => {
 
   return c.json(res);
 });
+
+app.get("/check-env", (c) => {
+  return c.json({
+    environment: {
+      APP_DOMAIN_NAME: Bun.env.APP_DOMAIN_NAME || "NOT SET",
+      DATABASE_URL: Bun.env.DATABASE_URL ? "✅ SET (hidden)" : "❌ NOT SET",
+      JWT_SECRET: Bun.env.JWT_SECRET ? "✅ SET (hidden)" : "❌ NOT SET",
+      PORT: Bun.env.PORT || process.env.PORT || "NOT SET",
+      NODE_ENV: Bun.env.NODE_ENV || process.env.NODE_ENV || "NOT SET",
+    },
+    corsOrigins: [
+      "http://localhost:5173",
+      "https://vitapulse.io",
+      "https://www.vitapulse.io"
+    ],
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.use("/auth/*", verifyUser);
+app.use("/auth/admin/*", verifyAdmin);
 
 // routes setup
 app.route("/register", registerRoute);
@@ -77,8 +103,25 @@ app.route("/auth/admin/readings", readingsRoute);
 app.route("/auth/admin/userManagement", userManagementRoute);
 app.route("/auth/admin/logs", ActivityLogsRoutes);
 
+console.log('\n' + '='.repeat(60));
+console.log('🚀 VitaPulse API - Environment Check');
+console.log('='.repeat(60));
+console.log('📅 Started at:', new Date().toISOString());
+console.log('🌍 NODE_ENV:', Bun.env.NODE_ENV || process.env.NODE_ENV || 'NOT SET');
+console.log('🔌 PORT:', Bun.env.PORT || process.env.PORT || '8000 (default)');
+console.log('\n📋 Environment Variables:');
+console.log('  APP_DOMAIN_NAME:', Bun.env.APP_DOMAIN_NAME || '❌ NOT SET');
+console.log('  DATABASE_URL:', Bun.env.DATABASE_URL ? '✅ SET' : '❌ NOT SET');
+console.log('  JWT_SECRET:', Bun.env.JWT_SECRET ? '✅ SET' : '❌ NOT SET');
+console.log('\n🌐 CORS Allowed Origins:');
+console.log('  - http://localhost:5173');
+console.log('  - https://vitapulse.io');
+console.log('  - https://www.vitapulse.io');
+console.log('='.repeat(60) + '\n');
+
 export default {
-  port: Bun.env.PORT || 8000,
+  port: Number(process.env.PORT || Bun.env.PORT) || 8000,
+  hostname: "0.0.0.0",
   fetch: app.fetch,
   websocket,
 };
