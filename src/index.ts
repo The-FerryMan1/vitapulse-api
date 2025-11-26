@@ -53,7 +53,7 @@ app.get("/debug", async (c) => {
 
 app.get("/env", (c) => {
   return c.json({
-    allowed_origin: Bun.env.APP_DOMAIN_NAME!,
+    allowed_origin_check: Bun.env.APP_DOMAIN_NAME!,
   });
 });
 
