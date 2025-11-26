@@ -1,9 +1,13 @@
-import 'dotenv/config';
 import { drizzle } from 'drizzle-orm/postgres-js';
-// export const db = drizzle(process.env.DB_FILE_NAME!);
-export const db = drizzle(process.env.DATABASE_URL!);
-async function main() {
-   const db = drizzle( process.env.DATABASE_URL!);
+import postgres from 'postgres';
+import * as schema from './schema';
+
+const connectionString = process.env.DATABASE_URL || Bun.env.DATABASE_URL;
+
+if (!connectionString) {
+  throw new Error('DATABASE_URL is not defined');
 }
 
-main()
+const client = postgres(connectionString);
+export const db = drizzle(client, { schema });
+export default db;
