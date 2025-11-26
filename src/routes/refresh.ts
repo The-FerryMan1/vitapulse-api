@@ -56,7 +56,7 @@ app.post('/', async (c) => {
                 maxAge: 15 * 60, //15mins,
                 expires: new Date(Date.now() + 15 * 60 * 1000),
                 sameSite: process.env.PRODUCTION! === 'production'?'None':"Strict",
-                secure: process.env.PRODUCTION === 'production'  // ✅
+                secure: process.env.PRODUCTION === 'production'  
             }
         );
 
