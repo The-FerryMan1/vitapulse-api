@@ -57,11 +57,12 @@ app.get("/debug", async (c) => {
 });
 
 app.get("/check-env", (c) => {
+  const isAccessSecretSet = !!Bun.env.ACCESS_TOKEN_SECRET;
+  const isRefreshSecretSet = !!Bun.env.REFRESH_TOKEN_SECRET;
   return c.json({
     environment: {
       APP_DOMAIN_NAME: Bun.env.APP_DOMAIN_NAME || "NOT SET",
       DATABASE_URL: Bun.env.DATABASE_URL ? "✅ SET (hidden)" : "❌ NOT SET",
-      JWT_SECRET: Bun.env.JWT_SECRET ? "✅ SET (hidden)" : "❌ NOT SET",
       PORT: Bun.env.PORT || process.env.PORT || "NOT SET",
       NODE_ENV: Bun.env.NODE_ENV || process.env.NODE_ENV || "NOT SET",
     },
@@ -116,7 +117,8 @@ console.log('🔌 PORT:', Bun.env.PORT || process.env.PORT || '8000 (default)');
 console.log('\n📋 Environment Variables:');
 console.log('  APP_DOMAIN_NAME:', Bun.env.APP_DOMAIN_NAME || '❌ NOT SET');
 console.log('  DATABASE_URL:', Bun.env.DATABASE_URL ? '✅ SET' : '❌ NOT SET');
-console.log('  JWT_SECRET:', Bun.env.JWT_SECRET ? '✅ SET' : '❌ NOT SET');
+console.log('  ACCESS_TOKEN_SECRET:', Bun.env.ACCESS_TOKEN_SECRET ? '✅ SET' : '❌ NOT SET');
+console.log('  REFRESH_TOKEN_SECRET:', Bun.env.REFRESH_TOKEN_SECRET ? '✅ SET' : '❌ NOT SET');
 console.log('\n🌐 CORS Allowed Origins:');
 console.log('  - http://localhost:5173');
 console.log('  - https://vitapulse.io');
