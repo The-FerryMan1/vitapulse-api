@@ -78,8 +78,8 @@ app.get("/check-env", (c) => {
 app.get("/env-debug", (c) => {
     return c.json({
         // The definitive check for the secrets!
-        ACCESS_TOKEN_SECRET_SET: !!Bun.env.ACCESS_TOKEN_SECRET,
-        REFRESH_TOKEN_SECRET_SET: !!Bun.env.REFRESH_TOKEN_SECRET,
+        ACCESS_SECRET_TOKEN_SET: !!Bun.env.ACCESS_SECRET_TOKEN,
+        REFRESH_SECRET_TOKEN_SET: !!Bun.env.REFRESH_SECRET_TOKEN,
 
         // Other status checks for context
         APP_DOMAIN_NAME_SET: !!Bun.env.APP_DOMAIN_NAME,
