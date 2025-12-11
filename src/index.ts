@@ -58,35 +58,30 @@ app.get("/debug", async (c) => {
 });
 
 app.get("/check-env", (c) => {
-  const isAccessSecretSet = !!Bun.env.ACCESS_SECRET_TOKEN;
-  const isRefreshSecretSet = !!Bun.env.REFRESH_SECRET_TOKEN;
   return c.json({
+    status: "ok",
     environment: {
-      APP_DOMAIN_NAME: Bun.env.APP_DOMAIN_NAME || "NOT SET",
-      DATABASE_URL: Bun.env.DATABASE_URL ? "✅ SET (hidden)" : "❌ NOT SET",
-      PORT: Bun.env.PORT || process.env.PORT || "NOT SET",
-      NODE_ENV: Bun.env.NODE_ENV || process.env.NODE_ENV || "NOT SET",
+      APP_DOMAIN_NAME: Bun.env.APP_DOMAIN_NAME || "❌ NOT SET",
+      DATABASE_URL: Bun.env.DATABASE_URL ? "✅ SET" : "❌ NOT SET",
+      ACCESS_SECRET_TOKEN: Bun.env.ACCESS_SECRET_TOKEN ? "✅ SET" : "❌ NOT SET",
+      REFRESH_SECRET_TOKEN: Bun.env.REFRESH_SECRET_TOKEN ? "✅ SET" : "❌ NOT SET",
+      COOKIE_SECRET_TOKEN: Bun.env.COOKIE_SECRET_TOKEN ? "✅ SET" : "❌ NOT SET",
+      PORT: Bun.env.PORT || "10000",
+      NODE_ENV: Bun.env.NODE_ENV || "development",
+      PRODUCTION: Bun.env.PRODUCTION || "NOT SET",
     },
-    corsOrigins: [
+    secrets_complete: !!(
+      Bun.env.ACCESS_SECRET_TOKEN && 
+      Bun.env.REFRESH_SECRET_TOKEN && 
+      Bun.env.COOKIE_SECRET_TOKEN
+    ),
+    cors: [
       "http://localhost:5173",
       "https://vitapulse.io",
       "https://www.vitapulse.io"
     ],
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
-});
-
-app.get("/env-debug", (c) => {
-    return c.json({
-        // The definitive check for the secrets!
-        ACCESS_SECRET_TOKEN_SET: !!Bun.env.ACCESS_SECRET_TOKEN,
-        REFRESH_SECRET_TOKEN_SET: !!Bun.env.REFRESH_SECRET_TOKEN,
-
-        // Other status checks for context
-        APP_DOMAIN_NAME_SET: !!Bun.env.APP_DOMAIN_NAME,
-        DATABASE_URL_SET: !!Bun.env.DATABASE_URL,
-        NODE_ENV_VALUE: Bun.env.NODE_ENV,
-    });
 });
 
 app.use("/auth/*", verifyUser);
