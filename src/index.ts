@@ -57,8 +57,8 @@ app.get("/debug", async (c) => {
 });
 
 app.get("/check-env", (c) => {
-  const isAccessSecretSet = !!Bun.env.ACCESS_TOKEN_SECRET;
-  const isRefreshSecretSet = !!Bun.env.REFRESH_TOKEN_SECRET;
+  const isAccessSecretSet = !!Bun.env.ACCESS_SECRET_TOKEN;
+  const isRefreshSecretSet = !!Bun.env.REFRESH_SECRET_TOKEN;
   return c.json({
     environment: {
       APP_DOMAIN_NAME: Bun.env.APP_DOMAIN_NAME || "NOT SET",
