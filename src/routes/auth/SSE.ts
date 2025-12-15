@@ -1,226 +1,281 @@
 import { Hono } from "hono";
-import { createBunWebSocket } from 'hono/bun';
-import type { ServerWebSocket } from 'bun';
+import { createBunWebSocket } from "hono/bun";
+import type { ServerWebSocket } from "bun";
 import { db } from "../../db";
-import { alertHistory, bpPulseRecords, loginStat, users } from "../../db/schema";
+import {
+  alertHistory,
+  bpPulseRecords,
+  loginStat,
+  users,
+} from "../../db/schema";
 import { and, asc, desc, eq, gte, lte, or } from "drizzle-orm";
 import { calculateZScores } from "../../utils/zScore";
 import { getTheAge } from "../../utils/getAge";
 const { upgradeWebSocket } = createBunWebSocket<ServerWebSocket>();
 const app = new Hono();
 
-app.get("/historical", upgradeWebSocket(async (c) => {
-    const { id } = await c.get('jwtPayload');
-    const filter = (await c.req.query("filter")) || "weekly";
+app.get(
+  "/historical",
+  upgradeWebSocket(async (c) => {
+    const { id } = await c.get("jwtPayload");
+    const filter = (await c.req.query("filter")) || "all";
     const fromQuery = await c.req.query("from");
     const toQuery = await c.req.query("to");
 
     let intervalId: Timer;
 
-
     return {
-        async onOpen(evt, ws) {
-            let startTime: Date;
-            intervalId = setInterval(async () => {
-                try {
+      async onOpen(evt, ws) {
+        let startTime: Date;
+        intervalId = setInterval(async () => {
+          try {
+            const now = new Date();
+            let endTime: Date = now;
+            switch (filter) {
+              case "all":
+                break;
+              case "hourly":
+                startTime = new Date(now.toISOString());
+                startTime.setUTCMinutes(0, 0, 0);
+                endTime = new Date(startTime);
+                endTime.setUTCHours(endTime.getUTCHours() + 1, 0, 0, 0);
 
-                    const now = new Date();
-                    let endTime: Date = now
-                    switch (filter) {
-                        case 'hourly':
-                            startTime = new Date(now.toISOString());
-                            startTime.setUTCMinutes(0, 0, 0);
-                            endTime = new Date(startTime);
-                            endTime.setUTCHours(endTime.getUTCHours() + 1, 0, 0, 0);
+              case "daily":
+                startTime = new Date(
+                  now.toISOString().split("T")[0] + "T00:00:00.000Z"
+                );
+                endTime = new Date(
+                  now.toISOString().split("T")[0] + "T23:59:59.999Z"
+                );
+                break;
 
-                        case 'daily':
-                            startTime = new Date(now.toISOString().split('T')[0] + 'T00:00:00.000Z');
-                            endTime = new Date(now.toISOString().split('T')[0] + 'T23:59:59.999Z');
-                            break;
+              case "weekly":
+                startTime = new Date(now);
+                startTime.setDate(now.getDate() - now.getDay());
+                startTime.setHours(0, 0, 0, 0);
+                break;
 
-                        case 'weekly':
-                            startTime = new Date(now);
-                            startTime.setDate(now.getDate() - now.getDay());
-                            startTime.setHours(0, 0, 0, 0);
-                            break;
-
-                        case 'monthly':
-                            startTime = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
-                            endTime = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999));
-                            break;
-                        case 'custom':
-                            if (!fromQuery || !toQuery) {
-                                return c.json({ errorMessage: 'Custom filter requires "from" and "to" query params' }, 400);
-                            }
-                            startTime = new Date(fromQuery);
-                            endTime = new Date(toQuery);
-                            if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
-                                return c.json({ errorMessage: 'Invalid "from" or "to" date format' }, 400);
-                            }
-                            break;
-                        default:
-                            return c.json({ errorMessage: 'Invalid filter option' }, 400);
-
-                    }
-                    const results = await db
-                        .select({
-                            id: bpPulseRecords.id,
-                            systolic: bpPulseRecords.systolic,
-                            diastolic: bpPulseRecords.diastolic,
-                            clinicalBpLabel: bpPulseRecords.clinicalBpLabel,
-                            bpStatus: bpPulseRecords.bpStatus,
-                            pulse: bpPulseRecords.pulse,
-                            pulseStatus: bpPulseRecords.pulseStatus,
-                            timestamp: bpPulseRecords.timestamp,
-                        })
-                        .from(bpPulseRecords)
-                        .where(
-                            and(
-                                eq(bpPulseRecords.user_id, id),
-                                gte(bpPulseRecords.timestamp, startTime.toISOString()),
-                                lte(bpPulseRecords.timestamp, endTime.toISOString())
-                            )
-                        )
-                        .orderBy(desc(bpPulseRecords.timestamp))
-                        ;
-
-                    // const resultWithPpAndMap = ppMapCalculate(results);
-                    const resultWithzScore = calculateZScores(results)
-
-
-                    ws.send(JSON.stringify(resultWithzScore))
-                } catch (error) {
-                    console.error('[GET /] Error:', error);
-
+              case "monthly":
+                startTime = new Date(
+                  Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)
+                );
+                endTime = new Date(
+                  Date.UTC(
+                    now.getUTCFullYear(),
+                    now.getUTCMonth() + 1,
+                    0,
+                    23,
+                    59,
+                    59,
+                    999
+                  )
+                );
+                break;
+              case "custom":
+                if (!fromQuery || !toQuery) {
+                  return c.json(
+                    {
+                      errorMessage:
+                        'Custom filter requires "from" and "to" query params',
+                    },
+                    400
+                  );
                 }
+                startTime = new Date(fromQuery);
+                endTime = new Date(toQuery);
+                if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
+                  return c.json(
+                    { errorMessage: 'Invalid "from" or "to" date format' },
+                    400
+                  );
+                }
+                break;
+              default:
+                return c.json({ errorMessage: "Invalid filter option" }, 400);
+            }
 
+            const conditions = [eq(bpPulseRecords.user_id, id)];
 
-            }, 5000)
-        },
-        async onMessage(evt, ws) {
-            console.log('Received message from client:', evt.data);
-        },
-        onClose(evt, ws) {
-            console.log('WebSocket connection closed:');
-            clearInterval(intervalId);
-        }
-    }
-}));
+            if (startTime && endTime) {
+              conditions.push(
+                gte(bpPulseRecords.timestamp, startTime.toISOString()),
+                lte(bpPulseRecords.timestamp, endTime.toISOString())
+              );
+            }
+            const results = await db
+              .select({
+                id: bpPulseRecords.id,
+                systolic: bpPulseRecords.systolic,
+                diastolic: bpPulseRecords.diastolic,
+                clinicalBpLabel: bpPulseRecords.clinicalBpLabel,
+                bpStatus: bpPulseRecords.bpStatus,
+                pulse: bpPulseRecords.pulse,
+                pulseStatus: bpPulseRecords.pulseStatus,
+                timestamp: bpPulseRecords.timestamp,
+              })
+              .from(bpPulseRecords)
+              .where(and(eq(bpPulseRecords.user_id, id), ...conditions))
+              .orderBy(desc(bpPulseRecords.timestamp));
+            // const resultWithPpAndMap = ppMapCalculate(results);
+            const resultWithzScore = calculateZScores(results);
 
+            ws.send(JSON.stringify(resultWithzScore));
+          } catch (error) {
+            console.error("[GET /] Error:", error);
+          }
+        }, 5000);
+      },
+      async onMessage(evt, ws) {
+        console.log("Received message from client:", evt.data);
+      },
+      onClose(evt, ws) {
+        console.log("WebSocket connection closed:");
+        clearInterval(intervalId);
+      },
+    };
+  })
+);
 
-
-app.get("/dashboard", upgradeWebSocket(async () => {
+app.get(
+  "/dashboard",
+  upgradeWebSocket(async () => {
     let intervalId: Timer;
     const ageGroups = [
-        { label: '0–17', min: 0, max: 17 },
-        { label: '18–30', min: 18, max: 30 },
-        { label: '31–45', min: 31, max: 45 },
-        { label: '46–60', min: 46, max: 60 },
-        { label: '61+', min: 61, max: Infinity },
+      { label: "0–17", min: 0, max: 17 },
+      { label: "18–30", min: 18, max: 30 },
+      { label: "31–45", min: 31, max: 45 },
+      { label: "46–60", min: 46, max: 60 },
+      { label: "61+", min: 61, max: Infinity },
     ];
 
     return {
-        async onOpen(evt, ws) {
-            console.log('webscoket connection opened')
-            try {
-                intervalId = setInterval(async () => {
-                    const user = await db.select().from(users);
+      async onOpen(evt, ws) {
+        console.log("webscoket connection opened");
+        try {
+          intervalId = setInterval(async () => {
+            const user = await db.select().from(users);
 
-                    const counts: Record<string, number> = {};
+            const counts: Record<string, number> = {};
 
-                    ageGroups.forEach((group) => {
-                        counts[group.label] = 0
-                    });
+            ageGroups.forEach((group) => {
+              counts[group.label] = 0;
+            });
 
-                    user.forEach((user) => {
-                        const age = getTheAge(user.birthday);
-                        const group = ageGroups.find(g => age >= g.min && age <= g.max);
-                        if (group) counts[group.label]++;
-                    })
+            user.forEach((user) => {
+              const age = getTheAge(user.birthday);
+              const group = ageGroups.find((g) => age >= g.min && age <= g.max);
+              if (group) counts[group.label]++;
+            });
 
-                    const userCount = await db.select({
-                        userCount: db.$count(users),
-                        statusCount: db.$count(users, eq(users.status, true)),
-                    }).from(users)
+            const userCount = await db
+              .select({
+                userCount: db.$count(users),
+                statusCount: db.$count(users, eq(users.status, true)),
+              })
+              .from(users);
 
-                    const alertCount = await db.$count(alertHistory);
+            const alertCount = await db.$count(alertHistory);
 
-                    const logins = await db.select().from(loginStat).orderBy(desc(loginStat.date)).limit(7);
-                    const abnormal = await db.select({ bpStatus: bpPulseRecords.bpStatus, timestamp: bpPulseRecords.timestamp }).from(bpPulseRecords).where(
-                        and(
-                            or(
-                                eq(bpPulseRecords.bpStatus, 'Low BP (Hypotension)'),
-                                eq(bpPulseRecords.bpStatus, 'Hypertensive Crisis'),
-                                eq(bpPulseRecords.bpStatus, 'Hypertension Stage 2'),
-                                eq(bpPulseRecords.bpStatus, 'Hypertension Stage 1'),
-                                eq(bpPulseRecords.bpStatus, 'Elevated'),
-                            )
-                        )
-                    );
+            const logins = await db
+              .select()
+              .from(loginStat)
+              .orderBy(desc(loginStat.date))
+              .limit(7);
+            const abnormal = await db
+              .select({
+                bpStatus: bpPulseRecords.bpStatus,
+                timestamp: bpPulseRecords.timestamp,
+              })
+              .from(bpPulseRecords)
+              .where(
+                and(
+                  or(
+                    eq(bpPulseRecords.bpStatus, "Low BP (Hypotension)"),
+                    eq(bpPulseRecords.bpStatus, "Hypertensive Crisis"),
+                    eq(bpPulseRecords.bpStatus, "Hypertension Stage 2"),
+                    eq(bpPulseRecords.bpStatus, "Hypertension Stage 1"),
+                    eq(bpPulseRecords.bpStatus, "Elevated")
+                  )
+                )
+              );
 
-                    ws.send(JSON.stringify({
-                        counts,
-                        logins,
-                        ...userCount[0],
-                        alertCount,
-                        abnormal
-                    }))
-                }, 3000)
+            ws.send(
+              JSON.stringify({
+                counts,
+                logins,
+                ...userCount[0],
+                alertCount,
+                abnormal,
+              })
+            );
+          }, 3000);
+        } catch (error) {
+          console.error("[GET /] Error:", error);
+        }
+      },
+      async onMessage(evt, ws) {
+        console.log("Received message from client:", evt.data);
+      },
+      async onClose(evt, ws) {
+        console.log("WebSocket connection closed:");
+        clearInterval(intervalId);
+      },
+    };
+  })
+);
 
-            } catch (error) {
-                console.error('[GET /] Error:', error);
-            }
-        },
-        async onMessage(evt, ws) {
-            console.log('Received message from client:', evt.data);
-        },
-        async onClose(evt, ws) {
-            console.log('WebSocket connection closed:');
-            clearInterval(intervalId);
-        },
-    }
-}))
-
-
-app.get("/notification", upgradeWebSocket(async (c) => {
-    const { id, role } = c.get('jwtPayload')
+app.get(
+  "/notification",
+  upgradeWebSocket(async (c) => {
+    const { id, role } = c.get("jwtPayload");
     let intervalId: Timer;
     return {
-        onOpen(evt, ws) {
-            console.log("Websocket Notification open");
-            intervalId = setInterval(async () => {
+      onOpen(evt, ws) {
+        console.log("Websocket Notification open");
+        intervalId = setInterval(async () => {
+          if (role !== "admin") {
+            try {
+              const alertHs = await db
+                .select()
+                .from(alertHistory)
+                .where(
+                  and(
+                    eq(alertHistory.user_id, id),
+                    eq(alertHistory.isRead, false)
+                  )
+                )
+                .orderBy(desc(alertHistory.timestamp))
+                .limit(3);
 
+              ws.send(JSON.stringify(alertHs));
+            } catch (error) {
+              console.log(error);
+            }
+          } else {
+            try {
+              const alertHs = await db
+                .select()
+                .from(alertHistory)
+                .where(eq(alertHistory.user_id, id))
+                .orderBy(desc(alertHistory.timestamp))
+                .limit(3);
 
-                if (role !== 'admin') {
-                    try {
-                        const alertHs = await db.select().from(alertHistory).where(and(eq(alertHistory.user_id, id), eq(alertHistory.isRead, false))).orderBy(desc(alertHistory.timestamp)).limit(3);
-
-                        ws.send(JSON.stringify(alertHs))
-                    } catch (error) {
-                        console.log(error)
-                    }
-                } else {
-
-                    try {
-                        const alertHs = await db.select().from(alertHistory).where(eq(alertHistory.user_id, id)).orderBy(desc(alertHistory.timestamp)).limit(3);
-
-                        ws.send(JSON.stringify(alertHs))
-                    } catch (error) {
-                        console.log(error)
-                    }
-
-                }
-
-            }, 1000)
-        },
-        onMessage(evt, ws) {
-            console.log(`Websocket Message: ${evt.data}`);
-        },
-        onClose(evt, ws) {
-            console.log("Websocket Closed")
-            clearTimeout(intervalId)
-        },
-    }
-}))
+              ws.send(JSON.stringify(alertHs));
+            } catch (error) {
+              console.log(error);
+            }
+          }
+        }, 1000);
+      },
+      onMessage(evt, ws) {
+        console.log(`Websocket Message: ${evt.data}`);
+      },
+      onClose(evt, ws) {
+        console.log("Websocket Closed");
+        clearTimeout(intervalId);
+      },
+    };
+  })
+);
 
 export { app as SSERoute };
