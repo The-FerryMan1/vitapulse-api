@@ -1,101 +1,83 @@
-import * as nodemailer from "nodemailer";
+import { google } from 'googleapis';
 import "dotenv/config";
-const transport = nodemailer.createTransport({
-  host: "smtp.gmail.com", 
-  port: 587,              
-  secure: false,          
-  auth: {
-    user: process.env.GOOGLE_APP_EMAIL!,
-    pass: process.env.GOOGLE_APP_PASSWORD!,
-  },
-  family: 4,
-});
 
-export const sendVerificationCode = async (email: string, code: string) => {
-  const mailOptions = {
-    from: process.env.GOOGLE_APP_EMAIL!,
-    to: email,
-    subject: "Verify Your Email Address",
-    text: `Welcome to Vitapulse! Please verify your email by clicking the following link: ${process.env.APP_DOMAIN_NAME!}/${code}`,
-    html: `
-        <div style="font-family: Arial, sans-serif; color: #333;">
-            <h2 style="color: #4CAF50;">Welcome to Vitapulse!</h2>
-            <p>Thank you for signing up. Please verify your email address to get started:</p>
-            <p>
-                <a href="${process.env.APP_DOMAIN_NAME!}/verification/${code}"
-                   style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
-                    Verify Email
-                </a>
-            </p>
-            <p>If the button doesn't work, you can also click or copy the link below into your browser:</p>
-            <p><a href="${process.env.APP_DOMAIN_NAME!}/verification/${code}">${Bun.env.APP_DOMAIN_NAME!}/verification/${code}</a></p>
-            <hr style="margin-top: 30px;">
-            <p style="font-size: 12px; color: #888;">If you didn't sign up for Vitapulse, please ignore this email.</p>
-        </div>
-    `,
-  };
+// Initialize the OAuth2 client
+const oAuth2Client = new google.auth.OAuth2(
+  process.env.CLIENT_ID,
+  process.env.CLIENT_SECRET,
+  "https://developers.google.com/oauthplayground"
+);
 
+oAuth2Client.setCredentials({ refresh_token: process.env.REFRESH_TOKEN });
+const gmail = google.gmail({ version: 'v1', auth: oAuth2Client });
+
+/**
+ * Core function to send the email via Gmail API
+ */
+const sendGmail = async (to: string, subject: string, htmlContent: string) => {
   try {
-    await transport.sendMail(mailOptions);
-    console.log("Verification email sent successfully");
-  } catch (error) {
-    console.error("Error sending verification email:", error);
-  }
-};
+    // Gmail API requires a specific RFC 2822 formatted string encoded in base64url
+    const subjectEncoded = `=?utf-8?B?${Buffer.from(subject).toString('base64')}?=`;
+    const messageParts = [
+      `To: ${to}`,
+      'Content-Type: text/html; charset=utf-8',
+      'MIME-Version: 1.0',
+      `Subject: ${subjectEncoded}`,
+      '',
+      htmlContent,
+    ];
+    const message = messageParts.join('\n');
 
-export const sendAlertEmail = async (email: string, alertMessage: string) => {
-  const mailOptions = {
-    from: process.env.GOOGLE_APP_EMAIL!,
-    to: email,
-    subject: "⚠️ Important Alert from Vitapulse",
-    text: `Hello,
+    const encodedMessage = Buffer.from(message)
+      .toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
 
-We wanted to let you know:
+    const res = await gmail.users.messages.send({
+      userId: 'me',
+      requestBody: { raw: encodedMessage },
+    });
 
-${alertMessage}
-
-If you did not initiate this or believe it's an error, please contact our support team immediately.
-
-– The Vitapulse Team`,
-    html: `
-        <div style="font-family: Arial, sans-serif; color: #333;">
-            <h2 style="color: #D32F2F;">⚠️ Important Alert from Vitapulse</h2>
-            <p>${alertMessage}</p>
-            <p style="margin-top: 20px;">
-                If you did not initiate this action or believe this is an error, please 
-                <a href="mailto:support@vitapulse.com" style="color: #D32F2F; text-decoration: underline;">
-                    contact our support team
-                </a> immediately.
-            </p>
-            <hr style="margin-top: 30px;">
-            <p style="font-size: 12px; color: #888;">This alert was sent to you based on your account activity at Vitapulse.</p>
-        </div>
-    `,
-  };
-
-  try {
-    await transport.sendMail(mailOptions);
-    console.log("Alert email sent successfully");
+    console.log("Email sent successfully. ID:", res.data.id);
     return true;
   } catch (error) {
-    console.error("Error sending alert email:", error);
+    console.error("Gmail API Send Error:", error);
     return false;
   }
 };
 
-export const sendResetPassword = async (email: string, token: string) => {
-  const mailOptions = {
-    from: process.env.GOOGLE_APP_EMAIL!,
-    to: email,
-    subject: "Password Reset",
-    html: `<p>You requested a password reset.</p>
-               <p>Click <a href="${Bun.env.APP_DOMAIN_NAME!}/reset-password/${token}">here</a> to reset your password. This link will expire in 1 hour.</p>`,
-  };
+export const sendVerificationCode = async (email: string, code: string) => {
+  const html = `
+    <div style="font-family: Arial, sans-serif; color: #333;">
+        <h2 style="color: #4CAF50;">Welcome to Vitapulse!</h2>
+        <p>Please verify your email address to get started:</p>
+        <p>
+            <a href="${process.env.APP_DOMAIN_NAME}/verification/${code}"
+               style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                Verify Email
+            </a>
+        </p>
+    </div>
+  `;
+  return await sendGmail(email, "Verify Your Email Address", html);
+};
 
-  try {
-    await transport.sendMail(mailOptions);
-    console.log("Verification email sent successfully");
-  } catch (error) {
-    console.error("Error sending verification email:", error);
-  }
+export const sendAlertEmail = async (email: string, alertMessage: string) => {
+  const html = `
+    <div style="font-family: Arial, sans-serif; color: #333;">
+        <h2 style="color: #D32F2F;">⚠️ Important Alert from Vitapulse</h2>
+        <p>${alertMessage}</p>
+        <p>If you did not initiate this, contact support.</p>
+    </div>
+  `;
+  return await sendGmail(email, "⚠️ Important Alert from Vitapulse", html);
+};
+
+export const sendResetPassword = async (email: string, token: string) => {
+  const html = `
+    <p>You requested a password reset.</p>
+    <p>Click <a href="${process.env.APP_DOMAIN_NAME}/reset-password/${token}">here</a> to reset your password.</p>
+  `;
+  return await sendGmail(email, "Password Reset", html);
 };

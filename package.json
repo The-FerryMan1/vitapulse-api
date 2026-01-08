@@ -4,15 +4,17 @@
     "dev": "bun run --hot src/index.ts",
     "build": "bun build src/index.ts --compile --outfile hono-app",
     "postinstall": "bun run build",
-    "start":"./hono-app"
+    "start": "./hono-app"
   },
   "dependencies": {
     "@libsql/client": "^0.15.2",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.44.7",
+    "googleapis": "^170.0.0",
     "hono": "^4.7.5",
     "nodemailer": "^6.10.1",
     "postgres": "^3.4.7",
+    "resend": "^6.6.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {
