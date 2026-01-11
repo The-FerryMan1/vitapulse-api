@@ -25,7 +25,7 @@ export const ABNORMAL_PULSE_STATUSES = ['High', 'Low'] as readonly string[];
 export const ALERT_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
 
 export const TOKEN_EXPIRATION = {
-  ACCESS: 60 , // 5 minutes in seconds
+  ACCESS: 5, // 5 minutes in seconds
   REFRESH: 7 * 24 * 60 * 60, // 7 days in seconds
 } as const;
 
