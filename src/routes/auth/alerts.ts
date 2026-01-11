@@ -1,7 +1,9 @@
 import { Hono } from "hono";
 import { db } from "../../db";
 import { alertHistory } from "../../db/schema";
-import { and, eq, gte, lte } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
+import { handleError } from "../../utils/errorHandler";
+import { ERROR_MESSAGES } from "../../utils/constants";
 
 const app = new Hono();
 
@@ -16,10 +18,8 @@ app.get("/", async (c) => {
       .orderBy(alertHistory.timestamp);
     return c.json(results, 200);
   } catch (error) {
-    console.log(error);
-    return c.json({
-      message: "Internal error",
-    });
+    const { message, statusCode } = handleError(error);
+    return c.json({ message }, statusCode);
   }
 });
 
@@ -34,17 +34,10 @@ app.patch("/:id", async (c) => {
         and(eq(alertHistory.user_id, id), eq(alertHistory.id, Number(paramId)))
       );
 
-    return c.json(
-      {
-        message: "alert status updated",
-      },
-      200
-    );
+    return c.json({ message: "Alert status updated" }, 200);
   } catch (error) {
-    console.log(error);
-    return c.json({
-      message: "Internal error",
-    });
+    const { message, statusCode } = handleError(error);
+    return c.json({ message }, statusCode);
   }
 });
 
@@ -57,17 +50,10 @@ app.patch("/", async (c) => {
       .set({ isRead: true })
       .where(eq(alertHistory.user_id, id));
 
-    return c.json(
-      {
-        message: "alert status updated",
-      },
-      200
-    );
+    return c.json({ message: "Alert status updated" }, 200);
   } catch (error) {
-    console.log(error);
-    return c.json({
-      message: "Internal error",
-    });
+    const { message, statusCode } = handleError(error);
+    return c.json({ message }, statusCode);
   }
 });
 
@@ -75,23 +61,28 @@ app.post("/delete", async (c) => {
   const { id: userID } = await c.get("jwtPayload");
 
   const payload = (await c.req.json()) as { id: number }[];
-  console.log(payload);
-  if (!payload) return c.json({ message: "No payload provided" }, 404);
+  if (!payload || !Array.isArray(payload) || payload.length === 0) {
+    return c.json({ message: "No payload provided" }, 400);
+  }
+
   try {
-    payload.forEach(async (ele) => {
-      const res = await db
-        .delete(alertHistory)
-        .where(
-          and(
-            eq(alertHistory.id, ele.id),
-            eq(alertHistory.user_id, Number(userID))
+    // Use Promise.all instead of forEach for proper async handling
+    await Promise.all(
+      payload.map((ele) =>
+        db
+          .delete(alertHistory)
+          .where(
+            and(
+              eq(alertHistory.id, ele.id),
+              eq(alertHistory.user_id, Number(userID))
+            )
           )
-        );
-    });
-    return c.json({ message: payload }, 200);
+      )
+    );
+    return c.json({ message: "Alerts deleted successfully" }, 200);
   } catch (error) {
-    console.error(error);
-    return c.json({ message: "unexpected error occured", error });
+    const { message, statusCode } = handleError(error);
+    return c.json({ message }, statusCode);
   }
 });
 

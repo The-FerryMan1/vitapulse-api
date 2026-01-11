@@ -5,10 +5,12 @@ import { db } from "../db";
 import { loginStat, logs, users } from "../db/schema";
 import { eq, sql } from "drizzle-orm";
 import { verifyHashPassword } from "../utils/hashVerify";
-import {sign} from "hono/jwt";
-import {setSignedCookie} from "hono/cookie";
+import { sign } from "hono/jwt";
+import { setSignedCookie } from "hono/cookie";
 import "dotenv/config";
 import { getTheAge } from "../utils/getAge";
+import { TOKEN_EXPIRATION, COOKIE_CONFIG, ERROR_MESSAGES } from "../utils/constants";
+import { handleError } from "../utils/errorHandler";
 
 const app = new Hono();
 
@@ -41,82 +43,85 @@ app.post('/', validator('json', (value, c)=>{
         const isPasswordMatch = await verifyHashPassword(password, hash_pass);
         if(!isPasswordMatch) return c.json({message: 'Credential do not match our records'}, 401);
 
-        //creating access token
+        // Creating access token
         const access_token = {
-            id: id,
-            age,
-            email: users_email,
-            isVerified,
-            status,
-            role: role,
-            exp: Math.floor(Date.now() / 1000) + 60 * 5 //5 mins
-        }
+          id,
+          age,
+          email: users_email,
+          isVerified,
+          status,
+          role,
+          exp: Math.floor(Date.now() / 1000) + TOKEN_EXPIRATION.ACCESS,
+        };
 
-        //creating refresh token
+        // Creating refresh token
         const refresh_token = {
-            id: id,
-            age,
-            email: users_email,
-            isVerified,
-            status,
-            role: role,
-            exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60 //7 mins
-        }
+          id,
+          age,
+          email: users_email,
+          isVerified,
+          status,
+          role,
+          exp: Math.floor(Date.now() / 1000) + TOKEN_EXPIRATION.REFRESH,
+        };
 
         //sign the access and refresh token
         const access = await sign(access_token, process.env.ACCESS_SECRET_TOKEN!);
         const refresh = await sign(refresh_token, process.env.REFRESH_SECRET_TOKEN!);
 
-        //configure cookies
+        const isProduction = process.env.PRODUCTION === "production";
+
+        // Configure cookies
         await setSignedCookie(
-            c,
-            'access_token',
-            access,
-            process.env.COOKIE_SECRET_TOKEN!,
-            {
-                path: '/',
-                httpOnly: true,
-                maxAge: 15 * 60, //15mins,
-                expires: new Date(Date.now() + 15 * 60 * 1000),
-                sameSite: process.env.PRODUCTION! === 'production'?'None':"Strict",
-                secure: process.env.PRODUCTION! === 'production'
-            }
+          c,
+          "access_token",
+          access,
+          process.env.COOKIE_SECRET_TOKEN!,
+          {
+            path: "/",
+            httpOnly: true,
+            maxAge: COOKIE_CONFIG.ACCESS_MAX_AGE,
+            expires: new Date(Date.now() + COOKIE_CONFIG.ACCESS_MAX_AGE * 1000),
+            sameSite: isProduction ? "None" : "Strict",
+            secure: isProduction,
+          }
         );
 
         await setSignedCookie(
-            c,
-            'refresh_token',
-            refresh,
-            process.env.COOKIE_SECRET_TOKEN!,
-            {
-                path: '/',
-                httpOnly: true,
-                maxAge: 7 * 24 * 60 * 60,  //7 days
-                expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-                sameSite: process.env.PRODUCTION! === 'production'?'None':"Strict",
-                secure: process.env.PRODUCTION! === 'production'
-            }
-        )
+          c,
+          "refresh_token",
+          refresh,
+          process.env.COOKIE_SECRET_TOKEN!,
+          {
+            path: "/",
+            httpOnly: true,
+            maxAge: COOKIE_CONFIG.REFRESH_MAX_AGE,
+            expires: new Date(Date.now() + COOKIE_CONFIG.REFRESH_MAX_AGE * 1000),
+            sameSite: isProduction ? "None" : "Strict",
+            secure: isProduction,
+          }
+        );
 
-        await db.update(users).set({status: true}).where(eq(users.id, id));
-        await db.insert(logs).values({ user_id: id, activity: 'Login', timestamp: new Date(Date.now()).toISOString() });
-        const today = new Date().toISOString().split('T')[0]; // "YYYY-MM-DD"
+        await db.update(users).set({ status: true }).where(eq(users.id, id));
+        await db.insert(logs).values({
+          user_id: id,
+          activity: "Login",
+          timestamp: new Date(Date.now()).toISOString(),
+        });
+        const today = new Date().toISOString().split("T")[0]; // "YYYY-MM-DD"
         await db
-            .insert(loginStat)
-            .values({ date: today, logins: 1 })
-            .onConflictDoUpdate({
-                target: [loginStat.date],
-                set: {
-                    logins: sql`${loginStat.logins} + 1`
-                }
-            });
-        return c.json({ message: 'Login successfuly' }, 200)
-
-    } catch (error) {
-        console.log(error)
-        return c.json({
-            message: "Unexpected error occured, please try again later"
-        }, 500)
-    }
+          .insert(loginStat)
+          .values({ date: today, logins: 1 })
+          .onConflictDoUpdate({
+            target: [loginStat.date],
+            set: {
+              logins: sql`${loginStat.logins} + 1`,
+            },
+          });
+        return c.json({ message: "Login successful" }, 200);
+      } catch (error) {
+        const { message, statusCode } = handleError(error);
+        return c.json({ message }, statusCode );
+      }
 });
 export {app as loginRoute};
