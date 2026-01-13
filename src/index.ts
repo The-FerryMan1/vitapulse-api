@@ -87,6 +87,7 @@ console.log(`Allowed Origin: ${Bun.env.APP_DOMAIN_NAME!}`);
 
 export default {
   port: Bun.env.PORT || 8000,
+  hostname: "0.0.0.0",
   fetch: app.fetch,
   websocket,
 };
